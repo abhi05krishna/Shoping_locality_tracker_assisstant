@@ -31,7 +31,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Learner check: Unlock a sample shop, change one item's price and quantity, save, then refresh the buyer page and confirm the same shop shows your update.
   Commit: `Complete vendor-to-buyer update flow`
 
-- [ ] **3. Read a reliable seven-day price trend**
+- [x] **3. Read a reliable seven-day price trend**
   Becomes usable: Opening an item shows seven consecutive local dates, a readable SVG chart, and “Price falling” only under the approved today-versus-previous-six-day-average rule.
   Why now: The chart depends on the now-working persistent save path. Filling missing dates at read time also exercises how reliable views can be derived from sparse stored events.
   PRD ref: `prd.md > Buyer browsing and item details`, `prd.md > Sample catalog, prices, and history`, `prd.md > States and Boundaries`
