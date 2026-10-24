@@ -1,0 +1,70 @@
+{
+  "default_shop_id": "campus-store",
+  "items": [
+    {"id":"tomatoes","name":"Tomatoes","unit":"kg","quantity_rule":"decimal","prices":["40","42","41","39","38","36","34"]},
+    {"id":"onions","name":"Onions","unit":"kg","quantity_rule":"decimal","prices":["52","51","52","53","52","54","55"]},
+    {"id":"potatoes","name":"Potatoes","unit":"kg","quantity_rule":"decimal","prices":["30","30","29","30","29","28","29"]},
+    {"id":"bananas","name":"Bananas","unit":"kg","quantity_rule":"decimal","prices":["60","61","60","59","60","58","58"]},
+    {"id":"green-chillies","name":"Green chillies","unit":"kg","quantity_rule":"decimal","prices":["70","72","75","71","69","68","67"]},
+    {"id":"milk","name":"Milk","unit":"litre","quantity_rule":"decimal","prices":["56","56","56","56","57","57","57"]},
+    {"id":"cooking-oil","name":"Cooking oil","unit":"litre","quantity_rule":"decimal","prices":["150","149","150","151","150","152","151"]},
+    {"id":"rice","name":"Rice","unit":"kg","quantity_rule":"decimal","prices":["60","60","61","60","59","60","60"]},
+    {"id":"atta","name":"Atta","unit":"kg","quantity_rule":"decimal","prices":["45","45","46","45","44","45","45"]},
+    {"id":"sugar","name":"Sugar","unit":"kg","quantity_rule":"decimal","prices":["44","44","45","44","44","43","44"]},
+    {"id":"dal","name":"Dal","unit":"kg","quantity_rule":"decimal","prices":["95","94","95","96","95","94","95"]},
+    {"id":"eggs","name":"Eggs","unit":"dozen","quantity_rule":"whole","prices":["80","81","80","82","81","80","80"]}
+  ],
+  "shops": [
+    {
+      "id":"campus-store","name":"Campus Corner Local Shop","pin":"1357","price_adjustment":"0.00",
+      "stock":{
+        "tomatoes":{"quantity":"4.0","low_stock_limit":"5.0"},
+        "onions":{"quantity":"18.0","low_stock_limit":"5.0"},
+        "potatoes":{"quantity":"22.0","low_stock_limit":"5.0"},
+        "bananas":{"quantity":"14.0","low_stock_limit":"4.0"},
+        "green-chillies":{"quantity":"6.0","low_stock_limit":"2.0"},
+        "milk":{"quantity":"8.0","low_stock_limit":"3.0"},
+        "cooking-oil":{"quantity":"12.0","low_stock_limit":"3.0"},
+        "rice":{"quantity":"0.0","low_stock_limit":"4.0"},
+        "atta":{"quantity":"10.0","low_stock_limit":"3.0"},
+        "sugar":{"quantity":"16.0","low_stock_limit":"3.0"},
+        "dal":{"quantity":"7.0","low_stock_limit":"2.0"},
+        "eggs":{"quantity":"6","low_stock_limit":"3"}
+      }
+    },
+    {
+      "id":"market-lane","name":"Market Lane Local Shop","pin":"2468","price_adjustment":"1.50",
+      "stock":{
+        "tomatoes":{"quantity":"9.0","low_stock_limit":"5.0"},
+        "onions":{"quantity":"3.0","low_stock_limit":"5.0"},
+        "potatoes":{"quantity":"16.0","low_stock_limit":"5.0"},
+        "bananas":{"quantity":"8.0","low_stock_limit":"4.0"},
+        "green-chillies":{"quantity":"5.0","low_stock_limit":"2.0"},
+        "milk":{"quantity":"2.0","low_stock_limit":"3.0"},
+        "cooking-oil":{"quantity":"8.0","low_stock_limit":"3.0"},
+        "rice":{"quantity":"15.0","low_stock_limit":"4.0"},
+        "atta":{"quantity":"9.0","low_stock_limit":"3.0"},
+        "sugar":{"quantity":"12.0","low_stock_limit":"3.0"},
+        "dal":{"quantity":"8.0","low_stock_limit":"2.0"},
+        "eggs":{"quantity":"5","low_stock_limit":"3"}
+      }
+    },
+    {
+      "id":"station-road","name":"Station Road Local Shop","pin":"9753","price_adjustment":"-0.75",
+      "stock":{
+        "tomatoes":{"quantity":"6.0","low_stock_limit":"5.0"},
+        "onions":{"quantity":"10.0","low_stock_limit":"5.0"},
+        "potatoes":{"quantity":"2.0","low_stock_limit":"5.0"},
+        "bananas":{"quantity":"3.0","low_stock_limit":"4.0"},
+        "green-chillies":{"quantity":"8.0","low_stock_limit":"2.0"},
+        "milk":{"quantity":"5.5","low_stock_limit":"3.0"},
+        "cooking-oil":{"quantity":"4.0","low_stock_limit":"3.0"},
+        "rice":{"quantity":"11.0","low_stock_limit":"4.0"},
+        "atta":{"quantity":"2.5","low_stock_limit":"3.0"},
+        "sugar":{"quantity":"7.0","low_stock_limit":"3.0"},
+        "dal":{"quantity":"5.0","low_stock_limit":"2.0"},
+        "eggs":{"quantity":"2","low_stock_limit":"3"}
+      }
+    }
+  ]
+}

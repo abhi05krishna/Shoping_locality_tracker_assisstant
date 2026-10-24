@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7f2">
+  <title>Local Shop Tracker — Buyer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('pages.buyer') }}" aria-label="Local Shop Tracker home">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span>Mandi<span class="brand-light">nearby</span></span>
+      </a>
+      <span class="local-tag"><span aria-hidden="true">●</span> Local shops</span>
+    </header>
+
+    <section class="intro">
+      <p class="eyebrow">SHOP LOCAL, PLAN AHEAD</p>
+      <h1>Your market,<br><span>at a glance.</span></h1>
+      <p class="intro-copy">Check today’s prices and what’s on the shelf before you head out.</p>
+    </section>
+
+    {% if error %}
+      <section class="notice notice-error" role="alert">{{ error }}</section>
+    {% else %}
+      <form class="shop-picker tile" aria-labelledby="shop-heading" method="get" action="{{ url_for('pages.buyer') }}">
+        <div>
+          <p class="eyebrow">PICK A SHOP</p>
+          <h2 id="shop-heading">Your local shop</h2>
+        </div>
+        <label class="select-wrap" for="shop-select">
+          <span class="sr-only">Choose a local shop</span>
+          <select id="shop-select" name="shop_id" onchange="this.form.submit()">
+            {% for shop in shops %}
+              <option value="{{ shop.id }}" {% if shop.id == selected_shop_id %}selected{% endif %}>{{ shop.name }}</option>
+            {% endfor %}
+          </select>
+          <span class="select-arrow" aria-hidden="true">⌄</span>
+        </label>
+      </form>
+
+      <section class="catalog-heading">
+        <div>
+          <p class="eyebrow">TODAY AT {{ selected_shop_name|upper }}</p>
+          <h2>Everyday essentials</h2>
+        </div>
+        <span class="item-count">{{ items|length }} items</span>
+      </section>
+
+      {% if items %}
+        <section class="item-grid" aria-label="Prices and availability at {{ selected_shop_name }}">
+          {% for item in items %}
+            <article class="item-card tile {% if item.status == 'out' %}item-card-out{% endif %}">
+              <div class="item-card-top">
+                <span class="item-emoji" aria-hidden="true">{% if item.id == 'tomatoes' %}🍅{% elif item.id == 'onions' %}🧅{% elif item.id == 'potatoes' %}🥔{% elif item.id == 'bananas' %}🍌{% elif item.id == 'green-chillies' %}🌶️{% elif item.id == 'milk' %}🥛{% elif item.id == 'cooking-oil' %}🫗{% elif item.id == 'rice' %}🍚{% elif item.id == 'atta' %}🌾{% elif item.id == 'sugar' %}🧂{% elif item.id == 'dal' %}🫘{% else %}🥚{% endif %}</span>
+                <span class="badge badge-{{ item.status }}"><span class="badge-dot" aria-hidden="true"></span>{{ item.status_label }}</span>
+              </div>
+              <h3>{{ item.name }}</h3>
+              <p class="price-line">
+                {% if item.price is none %}<span class="price-unavailable">Price unavailable</span>
+                {% else %}<span class="price-caption">{% if item.last_price %}Last price{% else %}Today’s price{% endif %}</span><strong>₹{{ item.price }} <small>/ {{ item.unit }}</small></strong>{% endif %}
+              </p>
+            </article>
+          {% endfor %}
+        </section>
+      {% else %}
+        <section class="empty-state tile"><span class="empty-icon" aria-hidden="true">🧺</span><h2>No items to show</h2><p>There isn’t any sample stock data for this local shop yet.</p></section>
+      {% endif %}
+      <footer class="page-footer"><span>Sample prices for a local demo</span><span>Updated for {{ selected_shop_name }}</span></footer>
+    {% endif %}
+  </main>
+</body>
+</html>

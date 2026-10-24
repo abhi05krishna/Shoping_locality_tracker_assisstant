@@ -1,0 +1,13 @@
+/devpost/learner-profile.md
+.env
+.env.*
+!.env.example
+# Local Python environment and generated runtime files
+.venv/
+__pycache__/
+*.py[cod]
+/instance/*.sqlite3
+/instance/*.sqlite3-*
+
+# Keep devpost/scope.md, devpost/prd.md, and devpost/spec.md in version control.
+# Only the learner profile is ignored above.
