@@ -38,6 +38,7 @@ Use light mode by default. Dark mode is optional; if time is short, it is the fi
 
 - Provide a public item list for a selected local shop. The shop picker offers 3–4 sample shops.
 - Each item card shows the item name, current availability, today's price and fixed unit, and the selling shop.
+- Each card visibly offers “View price trend”; the whole card is clickable, and opening it scrolls directly to that item's chart tile.
 - Show exactly one stock state per item: green “In stock”; amber “Few left” when quantity is positive and at or below that shop-item's threshold; or grey “Out of stock” at zero.
 - Keep low-stock cards in their normal list position. Dim and sort out-of-stock cards to the bottom while allowing them to open.
 - For zero stock, show the last known price with the “Last price” label; do not present it as today's price.

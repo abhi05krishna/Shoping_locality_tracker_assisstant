@@ -54,7 +54,7 @@
       {% if items %}
         <section class="item-grid" aria-label="Prices and availability at {{ selected_shop_name }}">
           {% for item in items %}
-            <a class="item-card tile {% if item.status == 'out' %}item-card-out{% endif %} {% if item.selected %}item-card-selected{% endif %}" href="{{ url_for('pages.buyer', shop_id=selected_shop_id, item_id=item.id) }}" aria-label="{{ item.name }}, {{ item.status_label }}. Open 7-day price trend.">
+            <a class="item-card tile {% if item.status == 'out' %}item-card-out{% endif %} {% if item.selected %}item-card-selected{% endif %}" href="{{ url_for('pages.buyer', shop_id=selected_shop_id, item_id=item.id, _anchor='price-trend') }}" aria-label="{{ item.name }}, {{ item.status_label }}. View price trend.">
               <div class="item-card-top">
                 <span class="item-emoji" aria-hidden="true">{% if item.id == 'tomatoes' %}🍅{% elif item.id == 'onions' %}🧅{% elif item.id == 'potatoes' %}🥔{% elif item.id == 'bananas' %}🍌{% elif item.id == 'green-chillies' %}🌶️{% elif item.id == 'milk' %}🥛{% elif item.id == 'cooking-oil' %}🫗{% elif item.id == 'rice' %}🍚{% elif item.id == 'atta' %}🌾{% elif item.id == 'sugar' %}🧂{% elif item.id == 'dal' %}🫘{% else %}🥚{% endif %}</span>
                 <span class="badge badge-{{ item.status }}"><span class="badge-dot" aria-hidden="true"></span>{{ item.status_label }}</span>
@@ -64,6 +64,7 @@
                 {% if item.price is none %}<span class="price-unavailable">Price unavailable</span>
                 {% else %}<span class="price-caption">{% if item.last_price %}Last price{% else %}Today’s price{% endif %}</span><strong>₹{{ item.price }} <small>/ {{ item.unit }}</small></strong>{% endif %}
               </p>
+              <span class="card-action">View price trend <span aria-hidden="true">→</span></span>
             </a>
           {% endfor %}
         </section>
@@ -71,10 +72,9 @@
         <section class="empty-state tile"><span class="empty-icon" aria-hidden="true">🧺</span><h2>No items to show</h2><p>There isn’t any sample stock data for this local shop yet.</p></section>
       {% endif %}
       {% if selected_item and chart %}
-        <section class="chart-tile tile" aria-labelledby="chart-heading">
+        <section class="chart-tile tile" id="price-trend" aria-labelledby="chart-heading">
           <div class="chart-header">
-            <div><p class="eyebrow">7-DAY PRICE TREND</p><h2 id="chart-heading">{{ selected_item.name }}</h2><p class="chart-current-price">{% if selected_item.price is not none %}₹{{ selected_item.price }} / {{ selected_item.unit }}{% else %}Price unavailable{% endif %}</p></div>
-            {% if chart.falling %}<span class="badge badge-in"><span class="badge-dot" aria-hidden="true"></span>Price falling</span>{% endif %}
+            <div class="chart-title-block"><p class="eyebrow">7-DAY PRICE TREND</p><div class="chart-title-row"><h2 id="chart-heading">{{ selected_item.name }}</h2>{% if chart.falling %}<span class="badge badge-in trend-signal"><span class="badge-dot" aria-hidden="true"></span>Price falling</span>{% endif %}</div><p class="chart-current-price">{% if selected_item.price is not none %}₹{{ selected_item.price }} / {{ selected_item.unit }}{% else %}Price unavailable{% endif %}</p></div>
           </div>
           <svg class="price-chart" viewBox="0 0 356 154" role="img" aria-labelledby="trend-title trend-desc">
             <title id="trend-title">Seven-day price trend for {{ selected_item.name }}</title>

@@ -8,7 +8,7 @@ A small local demo for checking sample prices and stock at nearby local shops. V
 2. Run `setup.cmd` once.
 3. Run `run.cmd` and open [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 
-The app runs on this computer only. SQLite data is stored persistently under the ignored `instance/` folder, which the app creates on first run.
+The app runs on this computer only. SQLite data is stored persistently under the ignored `instance/` folder, which the app creates on first run. If port 5000 is busy, the app falls back to `http://127.0.0.1:5001/`.
 
 ## Demo PINs — sample values only
 

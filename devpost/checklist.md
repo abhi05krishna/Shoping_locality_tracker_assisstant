@@ -46,8 +46,8 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Why now: Polish comes after behavior is complete, so styling supports real content and states rather than masking gaps.
   PRD ref: `prd.md > Screens and Layout`, `prd.md > Look and Feel`, `prd.md > Vendor access and stock updates`, `prd.md > States and Boundaries`
   Spec ref: `spec.md > Look and Feel`, `spec.md > Important Failure Modes`, `spec.md > Manual Verification Checklist`
-  Build: Finish responsive Bento Grid styles, touch-friendly vendor controls, accessible labels and visible text badges; address findings from the complete manual verification list without expanding the cut scope.
-  Verify (mechanical): Run every manual verification checklist item in `spec.md`; inspect buyer and vendor layouts at a phone-sized viewport and confirm no horizontal overflow or unreadable status state.
+  Build: Finish responsive Bento Grid styles, touch-friendly vendor controls, accessible labels and visible text badges; include a visible “View price trend” cue on each whole-card link and navigate directly to the chart anchor; address findings from the complete manual verification list without expanding the cut scope.
+  Verify (mechanical): Run every manual verification checklist item in `spec.md`; inspect buyer and vendor layouts at a phone-sized viewport and confirm no horizontal overflow or unreadable status state; verify every item card has the visible cue and its link targets `#price-trend`.
   Learner check: Try the buyer and vendor journeys at phone width, including zero stock and a validation error, and report anything that slows you down or reads unclearly.
   Commit: `Polish mobile flow and verify PRD states`
 
@@ -78,6 +78,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
 
 ## Final Review
 
+- [ ] Revision: Learner requested a hands-on recheck of chart discovery after this change: each card visibly says “View price trend”, the full card navigates to the chart anchor, and “Price falling” is near the chart title.
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
