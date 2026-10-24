@@ -21,7 +21,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Learner check: Open the buyer page on a phone-sized window, switch shops, and check whether prices and stock states make it clear where you could shop today.
   Commit: `Build seeded local buyer browsing`
 
-- [ ] **2. Update stock and price as a vendor, then see it as a buyer**
+- [x] **2. Update stock and price as a vendor, then see it as a buyer**
   Becomes usable: A shopkeeper unlocks one shop, saves a valid price and quantity, and the public buyer page shows the saved values after refresh; the vendor remains unlocked until Lock or shop switch.
   Why now: This is the unique end-to-end kernel: the shopkeeper's entry becomes the buyer's current information through the same persistent database.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Vendor access and stock updates`, `prd.md > Buyer browsing and item details`, `prd.md > States and Boundaries`
