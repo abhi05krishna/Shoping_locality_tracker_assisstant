@@ -118,13 +118,40 @@ def buyer():
         items.append({
             "id": row["id"], "name": row["name"], "unit": row["unit"],
             "price": format_rupees(row["price_paise"]),
+            "price_paise": row["price_paise"],
             "last_price": status == "out", "status": status,
             "status_label": status_label,
         })
     items.sort(key=lambda item: item["status"] == "out")
+
+    # Card chips and the selected chart use the same read-time trend calculation.
+    charts = {}
+    for item in items:
+        item_chart = prepare_seven_day_chart(db, selected_shop_id, item["id"])
+        item["falling"] = item_chart["falling"]
+        charts[item["id"]] = item_chart
+
     selected_item_id = request.args.get("item_id", "")
     selected_item = next((item for item in items if item["id"] == selected_item_id), None)
-    chart = prepare_seven_day_chart(db, selected_shop_id, selected_item_id) if selected_item else None
+    chart = charts.get(selected_item_id) if selected_item else None
+    if selected_item and selected_item["status"] != "out" and selected_item["price_paise"] is not None:
+        comparable_prices = db.execute(
+            """SELECT si.quantity_decimal, p.price_paise
+               FROM shop_items AS si
+               JOIN price_history AS p
+                 ON p.shop_id = si.shop_id AND p.item_id = si.item_id
+                AND p.price_date = (
+                    SELECT MAX(ph.price_date) FROM price_history AS ph
+                    WHERE ph.shop_id = si.shop_id AND ph.item_id = si.item_id AND ph.price_date <= ?
+                )
+               WHERE si.item_id = ?""",
+            (today, selected_item_id),
+        ).fetchall()
+        in_stock_prices = [row["price_paise"] for row in comparable_prices
+                           if Decimal(row["quantity_decimal"]) > 0 and row["price_paise"] is not None]
+        selected_item["cheapest_today"] = bool(
+            in_stock_prices and selected_item["price_paise"] == min(in_stock_prices)
+        )
     for item in items:
         item["selected"] = item["id"] == selected_item_id
     selected_shop_name = next(shop["name"] for shop in shops if shop["id"] == selected_shop_id)

@@ -47,7 +47,7 @@ PRD ref: `prd.md > The Core Journey` and `Vendor access and stock updates`.
 |---|---|---|
 | Python 3.13.5 | Already installed in this workspace; familiar to the learner and compatible with the selected Flask line. | Installing a newer runtime adds setup without helping this proof of concept. |
 | Flask 3.1.3 | One small local server handles routes, HTML templates, forms, static files, and the reset command. The Flask 3.1.x documentation supports Python 3.9 and newer; the official changelog lists 3.1.3. | FastAPI or a larger full-stack framework brings features this two-page local app does not need. |
-| Jinja templates + HTML/CSS + light vanilla JS | Server-rendered pages avoid a frontend build pipeline. CSS handles the Bento Grid; one small JS file persists the optional theme choice. | React is familiar and strong for component-heavy interfaces, but React/Vite adds a Node toolchain and a separate frontend build/dev-server path; React is intentionally out to protect the schedule. |
+| Jinja templates + HTML/CSS + light vanilla JS | Server-rendered pages avoid a frontend build pipeline. CSS handles the Bento Grid and the small interactions need no client-side application framework. | React is familiar and strong for component-heavy interfaces, but React/Vite adds a Node toolchain and a separate frontend build/dev-server path; React is intentionally out to protect the schedule. |
 | SQLite through Python `sqlite3` | A local disk database persists updates without running another service. A composite unique key enforces one price per shop-item-day. | JSON-only live storage is simpler at first but makes reliable updates and uniqueness constraints harder. SQLite stays small and has transactions. |
 | Inline SVG chart | Seven points can be rendered directly by the server with no chart package, network request, or JavaScript chart state. | Chart.js would add convenient chart interactions that the seven-day chart does not need. |
 | One JSON sample-data file | Keeps item units, shop PINs, per-shop sample values, thresholds, and trend patterns together for easy edits and repeatable reset. | Scattered Python constants are harder to maintain as one sample item definition. |
@@ -65,7 +65,7 @@ The official Flask 3.1.3 changelog and installation guidance, Flask template/sta
 
 ## Look and Feel
 
-Implement the approved Bento Grid style with responsive CSS: light background, rounded tiles, fresh green/amber/grey status colors, and bold prominent prices. The buyer header has a clear, visible “Vendor” link. Keep badge wording visible so meaning does not depend on color alone. On phones, stack the shop picker, cards, and selected item's chart tile. Do not add search; buyers browse the small catalog directly and choose a shop from the picker. The vendor form uses large fields and a clear Save button, plus the required Lock control. Avoid blur, 3D, and animation. Dark mode is optional and last in the build sequence; if included, use one toggle and `localStorage` to remember it. If time is short, omit the theme script and retain the light theme.
+Implement the approved Bento Grid style with responsive CSS: light background, rounded tiles, fresh green/amber/grey status colors, and bold prominent prices. The buyer header has a clear, visible “Vendor” link. Keep badge wording visible so meaning does not depend on color alone. On phones, stack the shop picker, cards, and selected item's chart tile. Do not add search; buyers browse the small catalog directly and choose a shop from the picker. The vendor form uses large fields and a clear Save button, plus the required Lock control. Avoid blur, 3D, and animation. Keep the light theme; dark mode is out of scope.
 
 PRD ref: `prd.md > Screens and Layout` and `Look and Feel`.
 
@@ -81,7 +81,7 @@ Implements `prd.md > The Core Journey`, `Buyer browsing and item details`, and `
 
 Create `instance/` automatically with parent creation enabled before the first SQLite connection, then create the SQLite schema on first run, enable foreign keys, and provide small functions for reading a shop's inventory/history and saving an update in one transaction. The `price_history` table has a unique key over `(shop_id, item_id, price_date)`; use SQLite upsert on that exact shop-item-date key so same-day saves replace the single point. Store prices only as integer paise (₹40.25 becomes 4025), never as binary floats, to keep two-decimal rupee arithmetic exact. Store fractional quantities and thresholds as normalized decimal strings, parse and compare them with Python `Decimal`, and format them using the fixed unit.
 
-Implements `prd.md > Vendor access and stock updates`, `Sample catalog, prices, and history`, and `Theme and persistence`.
+Implements `prd.md > Vendor access and stock updates` and `Sample catalog, prices, and history`.
 
 ### Seed loader and reset command — `data/sample_data.json`, `app/seed.py`, `app/reset_demo_data.py`
 
@@ -103,7 +103,7 @@ Implements `prd.md > Vendor access and stock updates` and `States and Boundaries
 
 ### Buyer cards and SVG chart — `app/charts.py`, `app/templates/buyer.html`, `app/static/css/app.css`
 
-Read shop-specific listings and the latest seven dates from SQLite. Each whole item card links to its chart and visibly says “View price trend”; a fragment link scrolls straight to the chart tile. At chart read time, fill missing dates from the latest preceding saved price and persist those carry-forward rows idempotently; if today's row is missing, carry forward the last saved price. Calculate the average of the preceding six daily prices; show “Price falling” only when today's price is strictly lower, near the top of the chart tile. Render one inline SVG line chart with labels and a readable no-history state when the comparison baseline is incomplete. Render stock state by quantity: zero is out of stock; positive quantity at/below the fixed threshold is few left; above threshold is in stock. Sort out-of-stock cards last and label their displayed value “Last price.”
+Read shop-specific listings and the latest seven dates from SQLite. Each whole item card links to its chart and visibly says “View price trend”; a fragment link scrolls straight to the chart tile. At chart read time, fill missing dates from the latest preceding saved price and persist those carry-forward rows idempotently; if today's row is missing, carry forward the last saved price. Calculate the average of the preceding six daily prices; show “Price falling” only when today's price is strictly lower, on both the matching item card and near the top of the chart tile. Incomplete baselines show no falling chip. For an opened item, compare effective prices across shops with positive stock; show “Cheapest today” on the selected shop's chart tile when its price equals the minimum, including ties. Exclude out-of-stock shops so stale last prices cannot earn the badge. Render one inline SVG line chart with labels and a readable no-history state when the comparison baseline is incomplete. Render stock state by quantity: zero is out of stock; positive quantity at/below the fixed threshold is few left; above threshold is in stock. Sort out-of-stock cards last and label their displayed value “Last price.”
 
 Implements `prd.md > Buyer browsing and item details` and `Sample catalog, prices, and history`.
 
@@ -112,12 +112,6 @@ Implements `prd.md > Buyer browsing and item details` and `Sample catalog, price
 Render a single tile for shop selection/PIN, then item selection and price/quantity form after server authorization. Validate every field again on the server: required, nonnegative price/quantity, no more than two price decimals, fractional quantities for kg/litre items, whole-number dozens for eggs. Zero quantity is valid. On valid submit, update stock and the one point for today's price atomically. Show a confirmation and vendor-only low-stock flag; do not close the session after Save. Provide Lock to clear access.
 
 Implements `prd.md > Vendor access and stock updates`.
-
-### Local theme — `app/static/js/theme.js`, `app/static/css/app.css`
-
-Only if time remains after the core loop and polish: add a light/dark toggle and save the selection in browser `localStorage`. It does not affect shop data or the database. This component is the first to cut if timing slips.
-
-Implements optional behavior from `prd.md > Look and Feel` and `Theme and persistence`.
 
 ## Data Model
 
@@ -129,7 +123,6 @@ Implements optional behavior from `prd.md > Look and Feel` and `Theme and persis
 | `shop_items` | `shop_id`, `item_id`, `quantity_decimal`, `low_stock_limit_decimal`; composite primary key. | Seeded from JSON; vendor save changes quantity. |
 | `price_history` | `shop_id`, `item_id`, `price_date` (local ISO date), integer `price_paise`; unique `(shop_id,item_id,price_date)`. Prices are never binary floats. | Seeded from JSON and updated by upsert on `(shop_id,item_id,price_date)`. A same-day save replaces the existing point. Rows persist across app restarts. |
 | Flask signed session | `vendor_shop_id` only; never the PIN. | Browser cookie signed by the server key; remains unlocked through Save, and clears on Lock, shop switch, or server restart. |
-| Browser `localStorage` | Optional theme preference only. | Per browser, independent of shop data; omit if dark mode is cut. |
 
 ## File Structure
 
@@ -149,7 +142,6 @@ mandi-tracker/
 │   │   └── vendor.html           # PIN gate and vendor update tile
 │   └── static/
 │       ├── css/app.css           # responsive Bento Grid and status styles
-│       └── js/theme.js           # optional last-priority dark-mode toggle
 ├── data/
 │   └── sample_data.json          # one editable seed source; sample PINs stay server-side
 ├── instance/
@@ -202,10 +194,10 @@ No external service, account, API key, or network API is required at runtime.
 | 2 | Complete the end-to-end vendor-to-buyer update: PIN checks and lockout, signed session, validated vendor save, transactional same-day upsert, and buyer refresh. | 65 min |
 | 3 | Add the seven-day SVG trend, read-time carry-forward with persisted gaps, falling-price comparison, and no-history state. | 40 min |
 | 4 | Make the core flow phone-friendly and resolve PRD edge cases through the manual checklist. | 55 min |
-| 5 | Optional remembered dark mode. **First to cut if time is short.** | 20 min |
+| 5 | Add cross-shop “Cheapest today” on the opened item and per-card “Price falling” chips using existing price-history and stock data. | 25 min |
 | 6 | Prepare the public submission: verify the repo contains the three planning docs and reset command, create the demo recording, and save a learner-reviewed project description. | 60 min |
 
-Estimated active work: **5 hours 20 minutes** with dark mode and **5 hours** without it. Estimates are rough and include the public remote and submission artifacts; the demo recording time varies with retakes. Tasks 1–2 establish the seed-to-buyer view and complete the core vendor-save loop before the chart and polish.
+Estimated active work: **5 hours 25 minutes**. Estimates are rough and include the public remote and submission artifacts; the demo recording time varies with retakes. Tasks 1–2 establish the seed-to-buyer view and complete the core vendor-save loop before the chart and polish.
 
 ## Manual Verification Checklist
 
@@ -216,6 +208,7 @@ Derived from `prd.md > The Core Journey`, `Buyer browsing and item details`, `Ve
 - [ ] Normal, few-left, and out-of-stock labels and order are correct. Out-of-stock cards show “Last price,” sort to the bottom, and still open their chart.
 - [ ] The chart contains seven consecutive local dates ending today; a missing date is filled and persisted at read time from the latest preceding saved price.
 - [ ] “Price falling” appears only when today's price is below the average of the previous six points; incomplete history shows no trend label.
+- [ ] Every item card shows “Price falling” only when its selected-shop history meets the same six-day rule; the opened item shows “Cheapest today” only when its available price is tied for or below all other in-stock local shops. Out-of-stock shops are excluded from the comparison.
 - [ ] A same-day save replaces the shop-item's price point for today; there is still only one point for that date.
 - [ ] Empty/malformed/wrong PIN paths show the specified messages; wrong PIN never reveals shop data or changes it. After five wrong attempts, access is blocked for 30 seconds. PIN values are absent from rendered page source and browser responses.
 - [ ] After successful PIN entry, Save keeps the vendor unlocked; switching shops or pressing Lock returns to PIN entry.
@@ -224,7 +217,7 @@ Derived from `prd.md > The Core Journey`, `Buyer browsing and item details`, `Ve
 - [ ] With the server stopped, run `reset-demo-data.cmd`; it prints a reminder to stop the server before asking for confirmation. Choosing No leaves the database unchanged; confirming restores the three required buyer states with dates relative to today and reports completion.
 - [ ] Starting with no `instance/` directory creates it automatically and initializes the persistent database.
 - [ ] README lists each demo PIN and clearly labels the values as samples only.
-- [ ] Close and relaunch the app; saved vendor updates persist. If dark mode was implemented, its preference persists too.
+- [ ] Close and relaunch the app; saved vendor updates persist.
 - [ ] On Windows, `setup.cmd` works once and `run.cmd` starts the app at `http://127.0.0.1:5000/` without a second service.
 
 ## Decisions and Open Issues

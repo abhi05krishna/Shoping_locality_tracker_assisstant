@@ -7,7 +7,7 @@ status: approved
 
 Build mode: fast
 
-Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish slices 3 and 4 tomorrow (2026-10-25, Asia/Calcutta); complete the final submission slice with several hours to spare. The exact Devpost deadline date and time zone still need to be supplied. Dark mode and the app map remain optional and are first cuts if the schedule slips.
+Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish slices 3 and 4 tomorrow (2026-10-25, Asia/Calcutta); add the small buyer comparison slice before preparing the final submission with several hours to spare. The exact Devpost deadline date and time zone still need to be supplied. Dark mode is out of scope; the app map remains optional.
 
 ## Slices
 
@@ -51,22 +51,22 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Learner check: Try the buyer and vendor journeys at phone width, including zero stock and a validation error, and report anything that slows you down or reads unclearly.
   Commit: `Polish mobile flow and verify PRD states`
 
-- [ ] **5. Optional dark mode (first to cut)**
-  Becomes usable: A small toggle switches the complete app between light and dark themes and remembers the choice in the browser.
-  Why now: This is explicitly optional and comes after all required end-to-end behavior and polish.
-  PRD ref: `prd.md > Look and Feel`, `prd.md > States and Boundaries`
-  Spec ref: `spec.md > Look and Feel`, `spec.md > Local theme`
-  Build: Add the theme toggle, accessible state, and `localStorage` preference without changing shop data.
-  Verify (mechanical): Toggle both ways, reload, and confirm the chosen theme remains readable and persists.
-  Learner check: Switch themes, reload once, and confirm your preferred look is retained.
-  Commit: `Add optional remembered dark mode`
+- [x] **5. Compare today's prices and surface falling trends on cards**
+  Becomes usable: Opening an item shows whether the selected local shop is cheapest among shops with stock, and cards make falling-price items visible without opening each chart.
+  Why now: It builds directly on the existing seven-day calculation and price records, adding a compact buyer cue before the submission recording.
+  PRD ref: `prd.md > Buyer browsing and item details`
+  Spec ref: `spec.md > Buyer cards and SVG chart`, `spec.md > Manual Verification Checklist`
+  Build: Reuse the approved six-day comparison to add a “Price falling” chip to matching item cards; compare effective prices for the opened item across shops with positive stock and show “Cheapest today” for the selected shop when tied for lowest. Keep search, accounts, and dark mode out of scope.
+  Verify (mechanical): Check falling and non-falling items against their six-day prices; vary shop prices to prove the lowest in-stock shop gets the badge, ties qualify, and an out-of-stock shop cannot get it. Confirm buyer browsing and vendor saves still work.
+  Learner check: Open the same item in two local shops and compare the “Cheapest today” and “Price falling” cues.
+  Commit: `Show buyer price comparison cues`
 
 - [ ] **6. Prepare the public project submission**
   Becomes usable: The public repository contains the finished app, README, reset command, and the three approved planning docs; the demo recording and a reviewed project description are ready alongside it.
   Why now: The app must be verified before recording; keeping submission work last ensures the repository and demo show the actual finished behavior.
   PRD ref: `prd.md > What We're Building`, `prd.md > Demo data reset`
   Spec ref: `spec.md > Where It Runs and How Someone Tries It`, `spec.md > File Structure`, `spec.md > Manual Verification Checklist`
-  Build: Recheck the public repository contents and generated-file ignores; add the confirmed `reset-demo-data` command and all three planning docs; use reset to prepare the date-relative demo states; guide the learner through recording the working buyer-to-vendor flow and placing the resulting demo recording in the public repository; prepare a concise project description for learner review and save the approved text in the repo.
+  Build: Recheck the public repository contents and generated-file ignores; confirm the `reset-demo-data` command and all three planning docs are included; use reset to prepare the date-relative demo states; guide the learner through recording the working buyer-to-vendor flow, including the buyer comparison cues, and placing the resulting demo recording in the public repository; prepare a concise project description for learner review and save the approved text in the repo.
   Verify (mechanical): Inspect the public remote contents and README; confirm `devpost/scope.md`, `devpost/prd.md`, `devpost/spec.md`, and `reset-demo-data.cmd` are present; verify the linked recording opens and the saved description matches the learner-approved text.
   Learner check: Open the public repository and the demo recording, then confirm they show the project you intend to submit and explain it accurately.
   Commit: `Prepare public demo submission`
@@ -74,11 +74,12 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — learner checked desktop and phone-sized layouts, confirmed shop switching and differing prices, and reported the layout looks good.
-- [ ] Final kick-the-tires exploration and feedback completed — after slice 4 (or slice 5 if dark mode is built), try the full buyer/vendor flow, awkward inputs, and report what should change.
+- [ ] Final kick-the-tires exploration and feedback completed — after slice 5, try the full buyer/vendor flow, awkward inputs, and report what should change.
 
 ## Final Review
 
-- [ ] Revision: Learner requested a hands-on recheck of chart discovery after this change: each card visibly says “View price trend”, the full card navigates to the chart anchor, and “Price falling” is near the chart title.
+- [ ] Revision: Learner requested a hands-on recheck of chart discovery after slice 4: each card visibly says “View price trend”, the full card navigates to the chart anchor, and “Price falling” is near the chart title.
+- [x] Revision: Add the learner-requested “Cheapest today” opened-item badge and “Price falling” item-card chips; verify the defined comparison rules and keep search, accounts, and dark mode out of scope.
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
@@ -94,3 +95,5 @@ Reflection: [offered/answered/declined/already covered — personal answer belon
 Activity mode: [live app and editor, explicit static fallback, focused alternative, prior practice, or recap]
 
 ## Revisions
+
+- Added slice 5 before submission for the opened-item “Cheapest today” badge and card-level “Price falling” chips, as requested after slice 4.

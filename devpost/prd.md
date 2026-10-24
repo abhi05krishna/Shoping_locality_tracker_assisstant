@@ -30,7 +30,7 @@ One simple, phone-friendly tile. Before access, it contains the shop picker and 
 
 ## Look and Feel
 
-Use light mode by default. Dark mode is optional; if time is short, it is the first feature to cut. If included, remember the user's theme choice when the app is reopened. Use a clean Bento Grid style with a light background, rounded tiles, fresh green, amber, and grey, and large bold prices. Keep both surfaces readable and fast to use on a phone. Avoid glass blur, 3D effects, and animations. Inspired by the smooth, simple experience of Flipkart, Amazon, and Blinkit at a small local-shop scale (`scope.md > Inspiration & Identity`).
+Use a light-mode-only clean Bento Grid style with rounded tiles, fresh green, amber, and grey, and large bold prices. Keep both surfaces readable and fast to use on a phone. Avoid glass blur, 3D effects, and animations. Inspired by the smooth, simple experience of Flipkart, Amazon, and Blinkit at a small local-shop scale (`scope.md > Inspiration & Identity`).
 
 ## Features and Behavior
 
@@ -39,10 +39,12 @@ Use light mode by default. Dark mode is optional; if time is short, it is the fi
 - Provide a public item list for a selected local shop. The shop picker offers 3–4 sample shops.
 - Each item card shows the item name, current availability, today's price and fixed unit, and the selling shop.
 - Each card visibly offers “View price trend”; the whole card is clickable, and opening it scrolls directly to that item's chart tile.
+- Show a “Price falling” chip on each card only when today's effective price is strictly below the average of the preceding six daily prices; incomplete history has no chip.
 - Show exactly one stock state per item: green “In stock”; amber “Few left” when quantity is positive and at or below that shop-item's threshold; or grey “Out of stock” at zero.
 - Keep low-stock cards in their normal list position. Dim and sort out-of-stock cards to the bottom while allowing them to open.
 - For zero stock, show the last known price with the “Last price” label; do not present it as today's price.
 - On item open, show a seven-day chart in a separate tile. The seven dates are generated relative to the current date and end today. If the vendor does not update an item today, today's price carries forward the most recently saved price. Keep exactly one price point per day per shop-item; another save on the same day replaces that day's point. The “Price falling” label is present only when today's price is lower than the arithmetic average of the preceding six daily prices. Incomplete comparison history means no label and a clear no-history message.
+- On the opened item, show a “Cheapest today” badge when the selected shop has the lowest effective price among shops where that item is currently in stock; tied lowest prices qualify. Do not award the badge to an out-of-stock selected shop or compare its stale last price.
 - If item data is unavailable, show a clear no-data message rather than a blank or misleading price.
 
 ### Vendor access and stock updates
@@ -69,7 +71,7 @@ Use light mode by default. Dark mode is optional; if time is short, it is the fi
 
 ### Theme and persistence
 
-- Start in light mode. Dark mode is optional; if included, let a user switch to it and remember the preference after closing and reopening. It is the first feature to cut if time is short.
+- Use light mode only; dark mode is out of scope.
 - Run the app locally only. Persist vendor price and stock updates so they remain after app restart; a buyer sees the updated values on refresh. No cloud service or deployment is part of this product (`scope.md > The POC Boundary` and `Explicitly Cut`).
 
 ### Demo data reset
@@ -91,7 +93,7 @@ Use light mode by default. Dark mode is optional; if time is short, it is the fi
 - **Successful vendor save:** Show confirmation; persist the values. A zero quantity becomes out of stock for the buyer after refresh. A second save for the same shop-item on the same day replaces today's point.
 - **Reset demo data:** Restore the seeded shop records, stock, prices, and current-date-relative history; the first buyer view again includes the three required demo states.
 - **Vendor session:** Access remains unlocked after Save until the vendor switches shops or presses Lock.
-- **Restart:** Vendor updates and, if implemented, the dark-mode preference remain saved. The app remains local-only.
+- **Restart:** Vendor updates remain saved. The app remains local-only.
 
 ## Product Decisions
 
@@ -107,7 +109,7 @@ Use light mode by default. Dark mode is optional; if time is short, it is the fi
 
 ## What We're Building
 
-A locally running, persistent, phone-friendly buyer and vendor experience with a public shop-filtered item list, item price charts, vendor PIN flow, stock and price updates, buyer and vendor stock states, low-stock flags, sample history and data, validation, clear empty/error/success states, a `reset-demo-data` command, and a persistent light-mode default. Dark mode is optional and first to cut if time is short.
+A locally running, persistent, phone-friendly buyer and vendor experience with a public shop-filtered item list, item price charts, vendor PIN flow, stock and price updates, buyer and vendor stock states, low-stock flags, sample history and data, validation, clear empty/error/success states, a `reset-demo-data` command, and a persistent light-mode default. Dark mode is out of scope.
 
 ## Deferred From the POC
 
