@@ -73,7 +73,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 1, inspect buyer browsing and sample shop states; feedback can shape the vendor and chart screens.
+- [x] Early usable behavior explored — learner checked desktop and phone-sized layouts, confirmed shop switching and differing prices, and reported the layout looks good.
 - [ ] Final kick-the-tires exploration and feedback completed — after slice 4 (or slice 5 if dark mode is built), try the full buyer/vendor flow, awkward inputs, and report what should change.
 
 ## Final Review
