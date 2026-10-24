@@ -8,7 +8,9 @@ SCHEMA = """
 PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS shops (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    failed_pin_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until INTEGER
 );
 CREATE TABLE IF NOT EXISTS items (
     id TEXT PRIMARY KEY,
@@ -63,6 +65,12 @@ def initialize_database(app):
         db = connect_db()
         try:
             db.executescript(SCHEMA)
+            columns = {row["name"] for row in db.execute("PRAGMA table_info(shops)")}
+            if "failed_pin_attempts" not in columns:
+                db.execute("ALTER TABLE shops ADD COLUMN failed_pin_attempts INTEGER NOT NULL DEFAULT 0")
+            if "locked_until" not in columns:
+                db.execute("ALTER TABLE shops ADD COLUMN locked_until INTEGER")
+            db.commit()
             seed_if_empty(db)
         finally:
             db.close()

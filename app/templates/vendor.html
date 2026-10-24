@@ -1,5 +1,103 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Vendor updates — Local Shop Tracker</title><link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}"></head>
-<body><main class="page-shell"><header class="topbar"><a class="brand" href="{{ url_for('pages.buyer') }}"><span class="brand-mark" aria-hidden="true">M</span><span>Mandi<span class="brand-light">nearby</span></span></a><a class="back-link" href="{{ url_for('pages.buyer') }}">Buyer view</a></header><section class="intro"><p class="eyebrow">LOCAL SHOP VENDOR</p><h1>Quick updates<br><span>are coming next.</span></h1><p class="intro-copy">The buyer page is ready. The next build slice adds secure shop access and stock updates.</p></section><section class="empty-state tile"><span class="empty-icon" aria-hidden="true">🧾</span><h2>Vendor page is next</h2><p>Slice 2 connects a vendor’s saved price and stock to the buyer page.</p><a class="button-link" href="{{ url_for('pages.buyer') }}">Return to buyer page</a></section></main></body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7f2">
+  <title>Vendor updates — Local Shop Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="{{ url_for('pages.buyer') }}"><span class="brand-mark" aria-hidden="true">M</span><span>Mandi<span class="brand-light">nearby</span></span></a>
+      <a class="back-link" href="{{ url_for('pages.buyer') }}">Buyer view</a>
+    </header>
+
+    <section class="intro vendor-intro">
+      <p class="eyebrow">LOCAL SHOP VENDOR</p>
+      <h1>Stock in sync.<br><span>In a few taps.</span></h1>
+      <p class="intro-copy">A quick update here is ready for buyers as soon as they refresh.</p>
+    </section>
+
+    <section class="vendor-panel tile" aria-labelledby="vendor-heading">
+      <div class="vendor-panel-heading">
+        <div><p class="eyebrow">SHOP ACCESS</p><h2 id="vendor-heading">Your shop update</h2></div>
+        {% if unlocked %}<span class="badge badge-in"><span class="badge-dot" aria-hidden="true"></span>Unlocked</span>{% endif %}
+      </div>
+
+      {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}<p class="notice notice-success" role="status">{{ message }}</p>{% endfor %}
+      {% endwith %}
+
+      <form class="form-group shop-select-form" method="get" action="{{ url_for('pages.vendor') }}">
+        <label for="vendor-shop">Local shop</label>
+        <div class="form-control-wrap">
+          <select id="vendor-shop" name="shop_id" onchange="this.form.submit()">
+            {% for shop in shops %}<option value="{{ shop.id }}" {% if shop.id == selected_shop_id %}selected{% endif %}>{{ shop.name }}</option>{% endfor %}
+          </select>
+          <span class="select-arrow" aria-hidden="true">⌄</span>
+        </div>
+      </form>
+
+      {% if not unlocked %}
+        <div class="pin-section">
+          <div><h3>Unlock {{ selected_shop_name }}</h3><p class="form-hint">Enter the shop’s 4-digit demo PIN to update its stock.</p></div>
+          <form class="form-group" method="post" action="{{ url_for('pages.vendor_unlock') }}">
+            <input type="hidden" name="shop_id" value="{{ selected_shop_id }}">
+            <label for="shop-pin">4-digit shop PIN</label>
+            <input id="shop-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="••••" required autofocus>
+            <button class="primary-button" type="submit">Unlock shop</button>
+          </form>
+        </div>
+      {% elif selected_item %}
+        <div class="vendor-toolbar">
+          <div><p class="eyebrow">EDITING</p><p class="current-shop-name">{{ selected_shop_name }}</p></div>
+          <form method="post" action="{{ url_for('pages.vendor_lock') }}"><button class="lock-button" type="submit">Lock</button></form>
+        </div>
+
+        <form class="form-group item-picker-form" method="get" action="{{ url_for('pages.vendor') }}">
+          <input type="hidden" name="shop_id" value="{{ selected_shop_id }}">
+          <label for="vendor-item">Item</label>
+          <div class="form-control-wrap">
+            <select id="vendor-item" name="item_id" onchange="this.form.submit()">
+              {% for item in items %}<option value="{{ item.id }}" {% if item.id == selected_item.id %}selected{% endif %}>{{ item.name }}</option>{% endfor %}
+            </select>
+            <span class="select-arrow" aria-hidden="true">⌄</span>
+          </div>
+        </form>
+
+        <div class="current-stock-card">
+          <div><p class="eyebrow">CURRENT ON SHELF</p><h3>{{ selected_item.name }}</h3></div>
+          <div class="vendor-current-values">
+            <span>{% if selected_item.price %}₹{{ selected_item.price }} / {{ selected_item.unit }}{% else %}No price yet{% endif %}</span>
+            <span>{{ selected_item.quantity }} {{ selected_item.unit }} in stock</span>
+          </div>
+          {% if selected_item.low_stock %}<p class="restock-flag" role="status"><span aria-hidden="true">!</span> Low stock, restock soon <small>Threshold: {{ selected_item.low_stock_limit }} {{ selected_item.unit }}</small></p>{% endif %}
+        </div>
+
+        <form class="update-form" method="post" action="{{ url_for('pages.vendor_save') }}">
+          <input type="hidden" name="shop_id" value="{{ selected_shop_id }}">
+          <input type="hidden" name="item_id" value="{{ selected_item.id }}">
+          <div class="input-grid">
+            <div class="form-group">
+              <label for="price">Today’s price <span class="label-unit">₹ / {{ selected_item.unit }}</span></label>
+              <input id="price" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="{{ selected_item.price_input if selected_item.price_input is defined else (selected_item.price or '') }}" required>
+            </div>
+            <div class="form-group">
+              <label for="quantity">Current quantity <span class="label-unit">{{ selected_item.unit }}</span></label>
+              <input id="quantity" name="quantity" type="number" min="0" step="{{ '1' if selected_item.quantity_rule == 'whole' else 'any' }}" inputmode="decimal" placeholder="0" value="{{ selected_item.quantity_input if selected_item.quantity_input is defined else selected_item.quantity }}" required>
+            </div>
+          </div>
+          {% if selected_item.quantity_rule == 'whole' %}<p class="form-hint">Enter a whole number of dozens.</p>{% else %}<p class="form-hint">Enter stock in {{ selected_item.unit }}; decimals are okay.</p>{% endif %}
+          <button class="primary-button save-button" type="submit">Save update</button>
+        </form>
+      {% else %}
+        <div class="empty-state vendor-empty"><span class="empty-icon" aria-hidden="true">🧺</span><h2>No items to update</h2><p>There isn’t any sample stock data for this shop yet.</p></div>
+      {% endif %}
+    </section>
+    <footer class="page-footer"><span>Local demo only</span><span>PIN is checked on this server</span></footer>
+  </main>
+</body>
 </html>

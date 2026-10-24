@@ -65,7 +65,7 @@ The official Flask 3.1.3 changelog and installation guidance, Flask template/sta
 
 ## Look and Feel
 
-Implement the approved Bento Grid style with responsive CSS: light background, rounded tiles, fresh green/amber/grey status colors, and bold prominent prices. Keep badge wording visible so meaning does not depend on color alone. On phones, stack the shop picker, cards, and selected item's chart tile. The vendor form uses large fields and a clear Save button, plus the required Lock control. Avoid blur, 3D, and animation. Dark mode is optional and last in the build sequence; if included, use one toggle and `localStorage` to remember it. If time is short, omit the theme script and retain the light theme.
+Implement the approved Bento Grid style with responsive CSS: light background, rounded tiles, fresh green/amber/grey status colors, and bold prominent prices. The buyer header has a clear, visible “Vendor” link. Keep badge wording visible so meaning does not depend on color alone. On phones, stack the shop picker, cards, and selected item's chart tile. Do not add search; buyers browse the small catalog directly and choose a shop from the picker. The vendor form uses large fields and a clear Save button, plus the required Lock control. Avoid blur, 3D, and animation. Dark mode is optional and last in the build sequence; if included, use one toggle and `localStorage` to remember it. If time is short, omit the theme script and retain the light theme.
 
 PRD ref: `prd.md > Screens and Layout` and `Look and Feel`.
 
@@ -73,7 +73,7 @@ PRD ref: `prd.md > Screens and Layout` and `Look and Feel`.
 
 ### Flask app and page routes — `app/__init__.py`, `app/routes.py`
 
-Create the Flask app, register page/form routes, open database connections per request, and render buyer/vendor templates. Use `GET /` for the buyer view, `GET /vendor` for vendor selection/access, and POST routes for unlock, save, and lock. After save, use a redirect back to the vendor page with a success message; the buyer reads the new values on refresh.
+Create the Flask app, register page/form routes, open database connections per request, and render buyer/vendor templates. The buyer header links directly to `/vendor`; do not add a search control. Use `GET /` for the buyer view, `GET /vendor` for vendor selection/access, and POST routes for unlock, save, and lock. After save, use a redirect back to the vendor page with a success message; the buyer reads the new values on refresh.
 
 Implements `prd.md > The Core Journey`, `Buyer browsing and item details`, and `Vendor access and stock updates`.
 

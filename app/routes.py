@@ -1,11 +1,15 @@
+import re
+import sqlite3
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
+from .auth import authenticate_shop, valid_pin_format
 from .db import get_db
 
 bp = Blueprint("pages", __name__)
+PRICE_PATTERN = re.compile(r"^\d+(?:\.\d{1,2})?$")
 
 
 def format_rupees(paise):
@@ -15,10 +19,69 @@ def format_rupees(paise):
     return value.rstrip("0").rstrip(".")
 
 
+def format_quantity(value):
+    number = Decimal(str(value))
+    return format(number.normalize(), "f") if number else "0"
+
+
+def _shops(db):
+    return db.execute("SELECT id, name FROM shops ORDER BY rowid").fetchall()
+
+
+def _render_vendor(db, shop_id, error=None, form_values=None):
+    shops = _shops(db)
+    selected = next((shop for shop in shops if shop["id"] == shop_id), shops[0] if shops else None)
+    if selected is None:
+        return render_template("vendor.html", shops=[], selected_shop_id="", error="No local shop data is available yet."), 503
+
+    unlocked = session.get("vendor_shop_id") == selected["id"]
+    items = []
+    selected_item = None
+    if unlocked:
+        today = date.today().isoformat()
+        rows = db.execute(
+            """SELECT i.id, i.name, i.unit, i.quantity_rule,
+                      si.quantity_decimal, si.low_stock_limit_decimal, p.price_paise
+               FROM shop_items AS si
+               JOIN items AS i ON i.id = si.item_id
+               LEFT JOIN price_history AS p
+                 ON p.shop_id = si.shop_id AND p.item_id = si.item_id
+                AND p.price_date = (
+                    SELECT MAX(ph.price_date) FROM price_history AS ph
+                    WHERE ph.shop_id = si.shop_id AND ph.item_id = si.item_id AND ph.price_date <= ?
+                )
+               WHERE si.shop_id = ? ORDER BY i.rowid""",
+            (today, selected["id"]),
+        ).fetchall()
+        for row in rows:
+            quantity = Decimal(row["quantity_decimal"])
+            limit = Decimal(row["low_stock_limit_decimal"])
+            items.append({
+                "id": row["id"], "name": row["name"], "unit": row["unit"],
+                "quantity_rule": row["quantity_rule"],
+                "quantity": format_quantity(quantity),
+                "low_stock_limit": format_quantity(limit),
+                "low_stock": quantity <= limit,
+                "price_paise": row["price_paise"],
+                "price": format_rupees(row["price_paise"]),
+            })
+        requested_item = request.args.get("item_id") or (form_values or {}).get("item_id")
+        selected_item = next((item for item in items if item["id"] == requested_item), items[0] if items else None)
+        if selected_item and form_values:
+            selected_item = {**selected_item, **form_values}
+
+    return render_template(
+        "vendor.html", shops=shops, selected_shop_id=selected["id"],
+        selected_shop_name=selected["name"], unlocked=unlocked,
+        items=items, selected_item=selected_item, error=error,
+        form_values=form_values or {},
+    )
+
+
 @bp.get("/")
 def buyer():
     db = get_db()
-    shops = db.execute("SELECT id, name FROM shops ORDER BY rowid").fetchall()
+    shops = _shops(db)
     if not shops:
         return render_template("buyer.html", shops=[], items=[], selected_shop_id="", error="No local shop data is available yet."), 503
 
@@ -37,8 +100,7 @@ def buyer():
                 SELECT MAX(ph.price_date) FROM price_history AS ph
                 WHERE ph.shop_id = si.shop_id AND ph.item_id = si.item_id AND ph.price_date <= ?
             )
-           WHERE si.shop_id = ?
-           ORDER BY i.rowid""",
+           WHERE si.shop_id = ? ORDER BY i.rowid""",
         (today, selected_shop_id),
     ).fetchall()
 
@@ -59,13 +121,136 @@ def buyer():
             "status_label": status_label,
         })
     items.sort(key=lambda item: item["status"] == "out")
-    return render_template(
-        "buyer.html", shops=shops, items=items,
-        selected_shop_id=selected_shop_id,
-        selected_shop_name=next(shop["name"] for shop in shops if shop["id"] == selected_shop_id),
-    )
+    selected_shop_name = next(shop["name"] for shop in shops if shop["id"] == selected_shop_id)
+    return render_template("buyer.html", shops=shops, items=items,
+                           selected_shop_id=selected_shop_id, selected_shop_name=selected_shop_name)
 
 
 @bp.get("/vendor")
-def vendor_placeholder():
-    return render_template("vendor.html"), 200
+def vendor():
+    db = get_db()
+    shops = _shops(db)
+    shop_ids = {shop["id"] for shop in shops}
+    requested = request.args.get("shop_id")
+    authorized_shop = session.get("vendor_shop_id")
+    if requested in shop_ids:
+        selected_shop_id = requested
+        if authorized_shop and authorized_shop != selected_shop_id:
+            session.pop("vendor_shop_id", None)
+    elif authorized_shop in shop_ids:
+        selected_shop_id = authorized_shop
+    elif shops:
+        selected_shop_id = shops[0]["id"]
+    else:
+        selected_shop_id = ""
+    return _render_vendor(db, selected_shop_id)
+
+
+@bp.post("/vendor/unlock")
+def vendor_unlock():
+    db = get_db()
+    shop_id = request.form.get("shop_id", "")
+    pin = request.form.get("pin", "")
+    valid_shop = db.execute("SELECT 1 FROM shops WHERE id = ?", (shop_id,)).fetchone()
+    if not valid_shop:
+        session.pop("vendor_shop_id", None)
+        return redirect(url_for("pages.vendor"))
+    if not valid_pin_format(pin):
+        return _render_vendor(db, shop_id, error="Enter your 4-digit shop PIN"), 400
+
+    result = authenticate_shop(db, shop_id, pin)
+    if result == "success":
+        session["vendor_shop_id"] = shop_id
+        return redirect(url_for("pages.vendor", shop_id=shop_id))
+    if result == "locked":
+        error = "Too many attempts. Try again in 30 seconds."
+    else:
+        error = "Incorrect PIN. Please try again."
+    return _render_vendor(db, shop_id, error=error), 401
+
+
+@bp.post("/vendor/lock")
+def vendor_lock():
+    shop_id = session.pop("vendor_shop_id", "")
+    return redirect(url_for("pages.vendor", shop_id=shop_id or None))
+
+
+def _parse_price(raw):
+    value = (raw or "").strip()
+    if not PRICE_PATTERN.fullmatch(value):
+        raise ValueError("Enter a price using whole rupees or up to two decimal places.")
+    try:
+        amount = Decimal(value)
+    except InvalidOperation as exc:
+        raise ValueError("Enter a valid price.") from exc
+    if not amount.is_finite() or amount < 0:
+        raise ValueError("Price cannot be negative.")
+    return int(amount * 100)
+
+
+def _parse_quantity(raw, quantity_rule):
+    value = (raw or "").strip()
+    if not value:
+        raise ValueError("Enter the current stock quantity.")
+    try:
+        quantity = Decimal(value)
+    except InvalidOperation as exc:
+        raise ValueError("Enter a valid stock quantity.") from exc
+    if not quantity.is_finite() or quantity < 0:
+        raise ValueError("Stock quantity cannot be negative.")
+    if not re.fullmatch(r"\d+(?:\.\d+)?", value):
+        raise ValueError("Enter a valid stock quantity.")
+    if quantity_rule == "whole" and not re.fullmatch(r"\d+", value):
+        raise ValueError("Eggs must be entered as a whole number of dozens.")
+    return quantity
+
+
+def _quantity_text(quantity):
+    return format(quantity.normalize(), "f") if quantity else "0"
+
+
+@bp.post("/vendor/save")
+def vendor_save():
+    db = get_db()
+    shop_id = request.form.get("shop_id", "")
+    item_id = request.form.get("item_id", "")
+    if not shop_id or session.get("vendor_shop_id") != shop_id:
+        session.pop("vendor_shop_id", None)
+        return redirect(url_for("pages.vendor", shop_id=shop_id or None))
+
+    item = db.execute(
+        """SELECT i.name, i.quantity_rule, si.low_stock_limit_decimal
+           FROM items AS i JOIN shop_items AS si ON si.item_id = i.id
+           WHERE i.id = ? AND si.shop_id = ?""",
+        (item_id, shop_id),
+    ).fetchone()
+    if item is None:
+        return _render_vendor(db, shop_id, error="Choose an item from this local shop."), 400
+
+    form_values = {"item_id": item_id, "price_input": request.form.get("price", ""),
+                   "quantity_input": request.form.get("quantity", "")}
+    try:
+        price_paise = _parse_price(form_values["price_input"])
+        quantity = _parse_quantity(form_values["quantity_input"], item["quantity_rule"])
+    except ValueError as exc:
+        return _render_vendor(db, shop_id, error=str(exc), form_values=form_values), 400
+
+    today = date.today().isoformat()
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        db.execute("UPDATE shop_items SET quantity_decimal = ? WHERE shop_id = ? AND item_id = ?",
+                   (_quantity_text(quantity), shop_id, item_id))
+        db.execute(
+            """INSERT INTO price_history(shop_id, item_id, price_date, price_paise)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(shop_id, item_id, price_date)
+               DO UPDATE SET price_paise = excluded.price_paise""",
+            (shop_id, item_id, today, price_paise),
+        )
+        db.commit()
+    except sqlite3.Error:
+        db.rollback()
+        return _render_vendor(db, shop_id, error="Could not save the update. Please try again."), 500
+
+    flash(f"Saved {item['name']}. The buyer page will show the update after refresh.", "success")
+    return redirect(url_for("pages.vendor", shop_id=shop_id, item_id=item_id))

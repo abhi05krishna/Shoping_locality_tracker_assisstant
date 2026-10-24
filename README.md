@@ -1,6 +1,6 @@
 # Mandi Nearby
 
-A small local demo that lets a buyer check sample prices and stock at a few local shops. A vendor update flow and seven-day price chart are the next build slices.
+A small local demo for checking sample prices and stock at nearby local shops. Vendors can unlock their shop, update an item’s current price and quantity, and see the update reflected on the public buyer page. Seven-day price charts are the next build slice.
 
 ## Run on Windows
 

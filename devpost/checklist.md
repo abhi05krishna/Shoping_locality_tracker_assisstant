@@ -26,7 +26,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Why now: This is the unique end-to-end kernel: the shopkeeper's entry becomes the buyer's current information through the same persistent database.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Vendor access and stock updates`, `prd.md > Buyer browsing and item details`, `prd.md > States and Boundaries`
   Spec ref: `spec.md > Vendor PIN gate and session`, `spec.md > Vendor update form`, `spec.md > Data access`, `spec.md > Data Model`
-  Build: Add server-side per-shop PIN check, malformed/wrong PIN messages and SQLite lockout, signed shop session, Lock/shop-switch behavior, vendor item form, unit-aware validation, atomic stock update and same-day price upsert, and buyer refresh rendering.
+  Build: Replace the “Local shops” header pill with a visible “Vendor” link to `/vendor`, without adding search; add server-side per-shop PIN check, malformed/wrong PIN messages and SQLite lockout, signed shop session, Lock/shop-switch behavior, vendor item form, unit-aware validation, atomic stock update and same-day price upsert, and buyer refresh rendering.
   Verify (mechanical): Exercise valid and invalid PIN, five-failure lockout, Lock and shop switching; save valid price/quantity and verify SQLite contains one row for the shop-item-date key and the buyer response shows the new stock and price; confirm invalid submissions leave data unchanged.
   Learner check: Unlock a sample shop, change one item's price and quantity, save, then refresh the buyer page and confirm the same shop shows your update.
   Commit: `Complete vendor-to-buyer update flow`

@@ -42,5 +42,6 @@ More shops or items, stronger vendor accounts, and broader restocking or demand 
 ## Explicitly Cut
 - Payments, orders, and delivery: the core proof is checking local availability and prices.
 - Maps, GPS, notifications, and recommendations: a local-shop picker is enough to demonstrate the stock and price check.
+- Search and item filtering: the small fixed catalog is browsed directly; buyers choose a local shop from the picker.
 - Multiple user roles and a full marketplace: the proof needs a public buyer view and a simple per-shop vendor update path.
 - Cloud hosting or deployment: local-only operation is sufficient for this proof of concept.

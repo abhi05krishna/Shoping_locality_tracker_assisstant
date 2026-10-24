@@ -22,7 +22,7 @@ Source: `scope.md > The Unique Kernel`, `The Core Loop`, `What "Working" Looks L
 
 ### Buyer page
 
-A light-background Bento Grid layout: the shop picker sits at the top, item cards below, and a separate chart tile appears for the selected item. Cards use large, bold prices with a fixed unit, clear text badges, rounded corners, and green, amber, and grey accents. The buyer page is public and never requires the vendor PIN.
+A light-background Bento Grid layout: the header includes a visible “Vendor” link, the shop picker sits below it at the top, item cards follow, and a separate chart tile appears for the selected item. Cards use large, bold prices with a fixed unit, clear text badges, rounded corners, and green, amber, and grey accents. The buyer page is public and never requires the vendor PIN. Do not add search; the shop picker and item list are the POC browsing controls.
 
 ### Vendor page
 
@@ -112,7 +112,7 @@ A locally running, persistent, phone-friendly buyer and vendor experience with a
 
 - Full vendor accounts, registration, PIN reset, and stronger access controls: simple shop-specific PINs prove the vendor update flow within the small local demo.
 - More than 12 sample items or 4 shops: the seeded catalog is enough to demonstrate the buyer and vendor loop.
-- Orders, payment, delivery, maps, GPS, notifications, recommendations, and broad demand analytics: none is needed to prove local stock and price visibility (`scope.md > Explicitly Cut`).
+- Orders, payment, delivery, maps, GPS, notifications, recommendations, search, and broad demand analytics: none is needed to prove local stock and price visibility (`scope.md > Explicitly Cut`).
 - Cloud sync, hosting, and deployment: the product is explicitly local-only.
 
 ## Possible Later Enhancements
