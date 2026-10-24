@@ -11,7 +11,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
 
 ## Slices
 
-- [ ] **1. Open a seeded buyer page, reset the demo, and connect the public repo**
+- [x] **1. Open a seeded buyer page, reset the demo, and connect the public repo**
   Becomes usable: A local Windows app starts with the default shop, 12 catalog items, current sample prices and stock states; the buyer can switch among local shops. The first run creates `instance/` and its persistent database automatically, and the public GitHub remote is connected for milestone pushes.
   Why now: This bootstraps the app inside a real buyer behavior, proving the canonical JSON-to-SQLite pipeline and first-run setup before vendor writes depend on it.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Buyer browsing and item details`, `prd.md > Sample catalog, prices, and history`, `prd.md > Demo data reset`
