@@ -41,7 +41,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Learner check: Open the seeded falling-price item and describe what the line and label tell you about whether today is a good time to buy.
   Commit: `Add seven-day price trend`
 
-- [ ] **4. Make the core flow phone-friendly and close PRD edge cases**
+- [x] **4. Make the core flow phone-friendly and close PRD edge cases**
   Becomes usable: Buyer and vendor screens are clear on a phone-sized viewport, and success, validation, empty-history, out-of-stock, and error states give plain next steps.
   Why now: Polish comes after behavior is complete, so styling supports real content and states rather than masking gaps.
   PRD ref: `prd.md > Screens and Layout`, `prd.md > Look and Feel`, `prd.md > Vendor access and stock updates`, `prd.md > States and Boundaries`
