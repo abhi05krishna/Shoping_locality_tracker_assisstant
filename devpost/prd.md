@@ -44,7 +44,7 @@ Use a light-mode-only clean Bento Grid style with rounded tiles, fresh green, am
 - Keep low-stock cards in their normal list position. Dim and sort out-of-stock cards to the bottom while allowing them to open.
 - For zero stock, show the last known price with the “Last price” label; do not present it as today's price.
 - On item open, show a seven-day chart in a separate tile. The seven dates are generated relative to the current date and end today. If the vendor does not update an item today, today's price carries forward the most recently saved price. Keep exactly one price point per day per shop-item; another save on the same day replaces that day's point. The “Price falling” label is present only when today's price is lower than the arithmetic average of the preceding six daily prices. Incomplete comparison history means no label and a clear no-history message.
-- On the opened item, show a “Cheapest today” badge when the selected shop has the lowest effective price among shops where that item is currently in stock; tied lowest prices qualify. Do not award the badge to an out-of-stock selected shop or compare its stale last price.
+- Show “Cheapest today” on each item card when its selected shop has the lowest effective price among shops where that item is currently in stock; tied lowest prices qualify. Do not award the badge to an out-of-stock selected shop or compare its stale last price. Keep the badge on the opened item's chart tile too.
 - If item data is unavailable, show a clear no-data message rather than a blank or misleading price.
 
 ### Vendor access and stock updates

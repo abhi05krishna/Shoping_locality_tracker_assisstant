@@ -134,23 +134,26 @@ def buyer():
     selected_item_id = request.args.get("item_id", "")
     selected_item = next((item for item in items if item["id"] == selected_item_id), None)
     chart = charts.get(selected_item_id) if selected_item else None
-    if selected_item and selected_item["status"] != "out" and selected_item["price_paise"] is not None:
-        comparable_prices = db.execute(
-            """SELECT si.quantity_decimal, p.price_paise
-               FROM shop_items AS si
-               JOIN price_history AS p
-                 ON p.shop_id = si.shop_id AND p.item_id = si.item_id
-                AND p.price_date = (
-                    SELECT MAX(ph.price_date) FROM price_history AS ph
-                    WHERE ph.shop_id = si.shop_id AND ph.item_id = si.item_id AND ph.price_date <= ?
-                )
-               WHERE si.item_id = ?""",
-            (today, selected_item_id),
-        ).fetchall()
-        in_stock_prices = [row["price_paise"] for row in comparable_prices
-                           if Decimal(row["quantity_decimal"]) > 0 and row["price_paise"] is not None]
-        selected_item["cheapest_today"] = bool(
-            in_stock_prices and selected_item["price_paise"] == min(in_stock_prices)
+    comparable_prices = db.execute(
+        """SELECT si.item_id, si.quantity_decimal, p.price_paise
+           FROM shop_items AS si
+           JOIN price_history AS p
+             ON p.shop_id = si.shop_id AND p.item_id = si.item_id
+            AND p.price_date = (
+                SELECT MAX(ph.price_date) FROM price_history AS ph
+                WHERE ph.shop_id = si.shop_id AND ph.item_id = si.item_id AND ph.price_date <= ?
+            )""",
+        (today,),
+    ).fetchall()
+    in_stock_prices = {}
+    for row in comparable_prices:
+        if Decimal(row["quantity_decimal"]) > 0 and row["price_paise"] is not None:
+            in_stock_prices.setdefault(row["item_id"], []).append(row["price_paise"])
+    for item in items:
+        prices = in_stock_prices.get(item["id"], [])
+        item["cheapest_today"] = bool(
+            item["status"] != "out" and item["price_paise"] is not None
+            and prices and item["price_paise"] == min(prices)
         )
     for item in items:
         item["selected"] = item["id"] == selected_item_id

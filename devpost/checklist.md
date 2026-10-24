@@ -52,12 +52,12 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
   Commit: `Polish mobile flow and verify PRD states`
 
 - [x] **5. Compare today's prices and surface falling trends on cards**
-  Becomes usable: Opening an item shows whether the selected local shop is cheapest among shops with stock, and cards make falling-price items visible without opening each chart.
+  Becomes usable: Cards identify the cheapest in-stock local shop and falling-price items; opening a card brings its chart tile into view.
   Why now: It builds directly on the existing seven-day calculation and price records, adding a compact buyer cue before the submission recording.
   PRD ref: `prd.md > Buyer browsing and item details`
   Spec ref: `spec.md > Buyer cards and SVG chart`, `spec.md > Manual Verification Checklist`
-  Build: Reuse the approved six-day comparison to add a “Price falling” chip to matching item cards; compare effective prices for the opened item across shops with positive stock and show “Cheapest today” for the selected shop when tied for lowest. Keep search, accounts, and dark mode out of scope.
-  Verify (mechanical): Check falling and non-falling items against their six-day prices; vary shop prices to prove the lowest in-stock shop gets the badge, ties qualify, and an out-of-stock shop cannot get it. Confirm buyer browsing and vendor saves still work.
+  Build: Reuse the approved six-day comparison to add a “Price falling” chip to matching item cards; compare effective prices across in-stock shops and show “Cheapest today” on each qualifying card and opened chart tile. After a card opens, explicitly scroll the chart tile into view. Keep search, accounts, and dark mode out of scope.
+  Verify (mechanical): Check falling and non-falling items against their six-day prices; vary shop prices to prove the lowest in-stock shop gets the badge on its card, ties qualify, and an out-of-stock shop cannot get it. Check that a card URL includes the chart fragment and the buyer script scrolls the tile into view. Confirm buyer browsing and vendor saves still work.
   Learner check: Open the same item in two local shops and compare the “Cheapest today” and “Price falling” cues.
   Commit: `Show buyer price comparison cues`
 
@@ -79,7 +79,7 @@ Timing plan: Finish slices 1 and 2 tonight (2026-10-24, Asia/Calcutta); finish s
 ## Final Review
 
 - [ ] Revision: Learner requested a hands-on recheck of chart discovery after slice 4: each card visibly says “View price trend”, the full card navigates to the chart anchor, and “Price falling” is near the chart title.
-- [x] Revision: Add the learner-requested “Cheapest today” opened-item badge and “Price falling” item-card chips; verify the defined comparison rules and keep search, accounts, and dark mode out of scope.
+- [x] Revision: Put “Cheapest today” on qualifying cards as well as the opened tile, and ensure card selection scrolls the chart tile into view; keep out-of-stock shops excluded.
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map

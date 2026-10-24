@@ -57,7 +57,7 @@
             <a class="item-card tile {% if item.status == 'out' %}item-card-out{% endif %} {% if item.selected %}item-card-selected{% endif %}" href="{{ url_for('pages.buyer', shop_id=selected_shop_id, item_id=item.id, _anchor='price-trend') }}" aria-label="{{ item.name }}, {{ item.status_label }}. View price trend.">
               <div class="item-card-top">
                 <span class="item-emoji" aria-hidden="true">{% if item.id == 'tomatoes' %}🍅{% elif item.id == 'onions' %}🧅{% elif item.id == 'potatoes' %}🥔{% elif item.id == 'bananas' %}🍌{% elif item.id == 'green-chillies' %}🌶️{% elif item.id == 'milk' %}🥛{% elif item.id == 'cooking-oil' %}🫗{% elif item.id == 'rice' %}🍚{% elif item.id == 'atta' %}🌾{% elif item.id == 'sugar' %}🧂{% elif item.id == 'dal' %}🫘{% else %}🥚{% endif %}</span>
-                <span class="item-badges"><span class="badge badge-{{ item.status }}"><span class="badge-dot" aria-hidden="true"></span>{{ item.status_label }}</span>{% if item.falling %}<span class="badge badge-falling"><span class="badge-dot" aria-hidden="true"></span>Price falling</span>{% endif %}</span>
+                <span class="item-badges"><span class="badge badge-{{ item.status }}"><span class="badge-dot" aria-hidden="true"></span>{{ item.status_label }}</span>{% if item.falling %}<span class="badge badge-falling"><span class="badge-dot" aria-hidden="true"></span>Price falling</span>{% endif %}{% if item.cheapest_today %}<span class="badge badge-cheapest">Cheapest today</span>{% endif %}</span>
               </div>
               <h3>{{ item.name }}</h3>
               <p class="price-line">
@@ -98,5 +98,6 @@
       <footer class="page-footer"><span>Sample prices for a local demo</span><span>Updated for {{ selected_shop_name }}</span></footer>
     {% endif %}
   </main>
+  <script src="{{ url_for('static', filename='js/buyer.js') }}" defer></script>
 </body>
 </html>

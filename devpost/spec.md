@@ -101,9 +101,9 @@ Flask's default session cookie is signed, not encrypted; its only value here is 
 
 Implements `prd.md > Vendor access and stock updates` and `States and Boundaries`.
 
-### Buyer cards and SVG chart — `app/charts.py`, `app/templates/buyer.html`, `app/static/css/app.css`
+### Buyer cards and SVG chart — `app/charts.py`, `app/routes.py`, `app/templates/buyer.html`, `app/static/js/buyer.js`, `app/static/css/app.css`
 
-Read shop-specific listings and the latest seven dates from SQLite. Each whole item card links to its chart and visibly says “View price trend”; a fragment link scrolls straight to the chart tile. At chart read time, fill missing dates from the latest preceding saved price and persist those carry-forward rows idempotently; if today's row is missing, carry forward the last saved price. Calculate the average of the preceding six daily prices; show “Price falling” only when today's price is strictly lower, on both the matching item card and near the top of the chart tile. Incomplete baselines show no falling chip. For an opened item, compare effective prices across shops with positive stock; show “Cheapest today” on the selected shop's chart tile when its price equals the minimum, including ties. Exclude out-of-stock shops so stale last prices cannot earn the badge. Render one inline SVG line chart with labels and a readable no-history state when the comparison baseline is incomplete. Render stock state by quantity: zero is out of stock; positive quantity at/below the fixed threshold is few left; above threshold is in stock. Sort out-of-stock cards last and label their displayed value “Last price.”
+Read shop-specific listings and the latest seven dates from SQLite. Each whole item card links to its chart and visibly says “View price trend”; a fragment link plus a post-render scroll keeps the chart tile in view after navigation, including at phone widths. At chart read time, fill missing dates from the latest preceding saved price and persist those carry-forward rows idempotently; if today's row is missing, carry forward the last saved price. Calculate the average of the preceding six daily prices; show “Price falling” only when today's price is strictly lower, on both the matching item card and near the top of the chart tile. Incomplete baselines show no falling chip. For each item, compare effective prices across shops with positive stock; show “Cheapest today” on the selected shop's card and opened chart tile when its price equals the minimum, including ties. Exclude out-of-stock shops so stale last prices cannot earn the badge. Render one inline SVG line chart with labels and a readable no-history state when the comparison baseline is incomplete. Render stock state by quantity: zero is out of stock; positive quantity at/below the fixed threshold is few left; above threshold is in stock. Sort out-of-stock cards last and label their displayed value “Last price.”
 
 Implements `prd.md > Buyer browsing and item details` and `Sample catalog, prices, and history`.
 
@@ -142,6 +142,7 @@ mandi-tracker/
 │   │   └── vendor.html           # PIN gate and vendor update tile
 │   └── static/
 │       ├── css/app.css           # responsive Bento Grid and status styles
+│       └── js/buyer.js           # scroll to the opened chart fragment after rendering
 ├── data/
 │   └── sample_data.json          # one editable seed source; sample PINs stay server-side
 ├── instance/
@@ -194,7 +195,7 @@ No external service, account, API key, or network API is required at runtime.
 | 2 | Complete the end-to-end vendor-to-buyer update: PIN checks and lockout, signed session, validated vendor save, transactional same-day upsert, and buyer refresh. | 65 min |
 | 3 | Add the seven-day SVG trend, read-time carry-forward with persisted gaps, falling-price comparison, and no-history state. | 40 min |
 | 4 | Make the core flow phone-friendly and resolve PRD edge cases through the manual checklist. | 55 min |
-| 5 | Add cross-shop “Cheapest today” on the opened item and per-card “Price falling” chips using existing price-history and stock data. | 25 min |
+| 5 | Add cross-shop “Cheapest today” chips on cards and opened items, keep the opened chart in view after selection, and show per-card “Price falling” chips. | 30 min |
 | 6 | Prepare the public submission: verify the repo contains the three planning docs and reset command, create the demo recording, and save a learner-reviewed project description. | 60 min |
 
 Estimated active work: **5 hours 25 minutes**. Estimates are rough and include the public remote and submission artifacts; the demo recording time varies with retakes. Tasks 1–2 establish the seed-to-buyer view and complete the core vendor-save loop before the chart and polish.
@@ -208,7 +209,7 @@ Derived from `prd.md > The Core Journey`, `Buyer browsing and item details`, `Ve
 - [ ] Normal, few-left, and out-of-stock labels and order are correct. Out-of-stock cards show “Last price,” sort to the bottom, and still open their chart.
 - [ ] The chart contains seven consecutive local dates ending today; a missing date is filled and persisted at read time from the latest preceding saved price.
 - [ ] “Price falling” appears only when today's price is below the average of the previous six points; incomplete history shows no trend label.
-- [ ] Every item card shows “Price falling” only when its selected-shop history meets the same six-day rule; the opened item shows “Cheapest today” only when its available price is tied for or below all other in-stock local shops. Out-of-stock shops are excluded from the comparison.
+- [ ] Each card shows “Cheapest today” only when its shop is tied for the lowest effective price among in-stock local shops; out-of-stock shops are excluded. Each card's “Price falling” chip follows the six-day rule, and clicking a card scrolls the chart tile into view.
 - [ ] A same-day save replaces the shop-item's price point for today; there is still only one point for that date.
 - [ ] Empty/malformed/wrong PIN paths show the specified messages; wrong PIN never reveals shop data or changes it. After five wrong attempts, access is blocked for 30 seconds. PIN values are absent from rendered page source and browser responses.
 - [ ] After successful PIN entry, Save keeps the vendor unlocked; switching shops or pressing Lock returns to PIN entry.
