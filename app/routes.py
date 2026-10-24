@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from .auth import authenticate_shop, valid_pin_format
+from .charts import prepare_seven_day_chart
 from .db import get_db
 
 bp = Blueprint("pages", __name__)
@@ -121,9 +122,15 @@ def buyer():
             "status_label": status_label,
         })
     items.sort(key=lambda item: item["status"] == "out")
+    selected_item_id = request.args.get("item_id", "")
+    selected_item = next((item for item in items if item["id"] == selected_item_id), None)
+    chart = prepare_seven_day_chart(db, selected_shop_id, selected_item_id) if selected_item else None
+    for item in items:
+        item["selected"] = item["id"] == selected_item_id
     selected_shop_name = next(shop["name"] for shop in shops if shop["id"] == selected_shop_id)
     return render_template("buyer.html", shops=shops, items=items,
-                           selected_shop_id=selected_shop_id, selected_shop_name=selected_shop_name)
+                           selected_shop_id=selected_shop_id, selected_shop_name=selected_shop_name,
+                           selected_item=selected_item, chart=chart)
 
 
 @bp.get("/vendor")

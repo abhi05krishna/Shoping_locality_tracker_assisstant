@@ -49,11 +49,12 @@
         </div>
         <span class="item-count">{{ items|length }} items</span>
       </section>
+      <p class="catalog-hint">Tap an item to see its 7-day price trend.</p>
 
       {% if items %}
         <section class="item-grid" aria-label="Prices and availability at {{ selected_shop_name }}">
           {% for item in items %}
-            <article class="item-card tile {% if item.status == 'out' %}item-card-out{% endif %}">
+            <a class="item-card tile {% if item.status == 'out' %}item-card-out{% endif %} {% if item.selected %}item-card-selected{% endif %}" href="{{ url_for('pages.buyer', shop_id=selected_shop_id, item_id=item.id) }}" aria-label="{{ item.name }}, {{ item.status_label }}. Open 7-day price trend.">
               <div class="item-card-top">
                 <span class="item-emoji" aria-hidden="true">{% if item.id == 'tomatoes' %}🍅{% elif item.id == 'onions' %}🧅{% elif item.id == 'potatoes' %}🥔{% elif item.id == 'bananas' %}🍌{% elif item.id == 'green-chillies' %}🌶️{% elif item.id == 'milk' %}🥛{% elif item.id == 'cooking-oil' %}🫗{% elif item.id == 'rice' %}🍚{% elif item.id == 'atta' %}🌾{% elif item.id == 'sugar' %}🧂{% elif item.id == 'dal' %}🫘{% else %}🥚{% endif %}</span>
                 <span class="badge badge-{{ item.status }}"><span class="badge-dot" aria-hidden="true"></span>{{ item.status_label }}</span>
@@ -63,11 +64,36 @@
                 {% if item.price is none %}<span class="price-unavailable">Price unavailable</span>
                 {% else %}<span class="price-caption">{% if item.last_price %}Last price{% else %}Today’s price{% endif %}</span><strong>₹{{ item.price }} <small>/ {{ item.unit }}</small></strong>{% endif %}
               </p>
-            </article>
+            </a>
           {% endfor %}
         </section>
       {% else %}
         <section class="empty-state tile"><span class="empty-icon" aria-hidden="true">🧺</span><h2>No items to show</h2><p>There isn’t any sample stock data for this local shop yet.</p></section>
+      {% endif %}
+      {% if selected_item and chart %}
+        <section class="chart-tile tile" aria-labelledby="chart-heading">
+          <div class="chart-header">
+            <div><p class="eyebrow">7-DAY PRICE TREND</p><h2 id="chart-heading">{{ selected_item.name }}</h2><p class="chart-current-price">{% if selected_item.price is not none %}₹{{ selected_item.price }} / {{ selected_item.unit }}{% else %}Price unavailable{% endif %}</p></div>
+            {% if chart.falling %}<span class="badge badge-in"><span class="badge-dot" aria-hidden="true"></span>Price falling</span>{% endif %}
+          </div>
+          <svg class="price-chart" viewBox="0 0 356 154" role="img" aria-labelledby="trend-title trend-desc">
+            <title id="trend-title">Seven-day price trend for {{ selected_item.name }}</title>
+            <desc id="trend-desc">Each point shows a saved or carried-forward daily price at {{ selected_shop_name }}. Dates end today.</desc>
+            <line class="chart-grid-line" x1="20" y1="105" x2="336" y2="105"></line>
+            {% for path in chart.path_segments %}<path class="chart-line" d="{{ path }}"></path>{% endfor %}
+            {% for point in chart.points %}
+              {% if point.price is not none %}<circle class="chart-point" cx="{{ point.x }}" cy="{{ point.y }}" r="4"><title>{{ point.date }}: ₹{{ point.price }} / {{ selected_item.unit }}</title></circle>{% endif %}
+              <text class="chart-date" x="{{ point.x }}" y="132">{{ point.label }} {{ point.day_of_month }}</text>
+            {% endfor %}
+          </svg>
+          {% if not chart.complete %}
+            {% if chart.has_prices %}<p class="chart-note" role="status">Price trend unavailable: not enough saved prices for a 7-day comparison yet.</p>
+            {% else %}<p class="chart-note" role="status">No price history yet for this local shop.</p>{% endif %}
+          {% endif %}
+          <ul class="sr-only" aria-label="Daily price points">
+            {% for point in chart.points %}<li>{{ point.date }}: {% if point.price is not none %}₹{{ point.price }} / {{ selected_item.unit }}{% else %}no saved price{% endif %}</li>{% endfor %}
+          </ul>
+        </section>
       {% endif %}
       <footer class="page-footer"><span>Sample prices for a local demo</span><span>Updated for {{ selected_shop_name }}</span></footer>
     {% endif %}
