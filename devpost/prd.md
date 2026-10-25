@@ -104,7 +104,7 @@ Use a light-mode-only clean Bento Grid style with rounded tiles, fresh green, am
 - Item units are fixed, shown beside prices, and are not editable in the vendor flow to prevent unit mistakes.
 - The sample catalog and fixed shop-item limits should be maintained together in one source; the specific format is a technical-spec decision.
 - The app runs locally with persistent data, without cloud hosting or deployment.
-- Dark mode is optional and is the first feature to cut if time is short; light mode remains the default.
+- Light mode only; dark mode is out of scope.
 - A `reset-demo-data` command restores the demo shops, stock, prices, and date-relative history before recording.
 
 ## What We're Building

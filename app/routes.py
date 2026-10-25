@@ -1,4 +1,6 @@
+import hmac
 import re
+import secrets
 import sqlite3
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -10,7 +12,26 @@ from .charts import prepare_seven_day_chart
 from .db import get_db
 
 bp = Blueprint("pages", __name__)
-PRICE_PATTERN = re.compile(r"^\d+(?:\.\d{1,2})?$")
+PRICE_PATTERN = re.compile(r"^[0-9]{1,16}(?:\.[0-9]{1,2})?$")
+
+
+def _csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+
+def _valid_csrf_token():
+    expected = session.get("_csrf_token", "")
+    supplied = request.form.get("csrf_token", "")
+    return bool(expected and supplied and hmac.compare_digest(expected, supplied))
+
+
+@bp.app_context_processor
+def inject_csrf_token():
+    return {"csrf_token": _csrf_token}
 
 
 def format_rupees(paise):
@@ -22,7 +43,8 @@ def format_rupees(paise):
 
 def format_quantity(value):
     number = Decimal(str(value))
-    return format(number.normalize(), "f") if number else "0"
+    text = format(number, "f")
+    return text.rstrip("0").rstrip(".") if "." in text else text
 
 
 def _shops(db):
@@ -188,6 +210,10 @@ def vendor_unlock():
     db = get_db()
     shop_id = request.form.get("shop_id", "")
     pin = request.form.get("pin", "")
+    if not _valid_csrf_token():
+        valid_shop = db.execute("SELECT 1 FROM shops WHERE id = ?", (shop_id,)).fetchone()
+        return _render_vendor(db, shop_id if valid_shop else "",
+                              error="This form expired. Refresh the page and try again."), 400
     valid_shop = db.execute("SELECT 1 FROM shops WHERE id = ?", (shop_id,)).fetchone()
     if not valid_shop:
         session.pop("vendor_shop_id", None)
@@ -208,27 +234,32 @@ def vendor_unlock():
 
 @bp.post("/vendor/lock")
 def vendor_lock():
+    if not _valid_csrf_token():
+        shop_id = session.get("vendor_shop_id", "")
+        return _render_vendor(get_db(), shop_id,
+                              error="This form expired. Refresh the page and try again."), 400
     shop_id = session.pop("vendor_shop_id", "")
     return redirect(url_for("pages.vendor", shop_id=shop_id or None))
 
 
 def _parse_price(raw):
     value = (raw or "").strip()
-    if not PRICE_PATTERN.fullmatch(value):
-        raise ValueError("Enter a price using whole rupees or up to two decimal places.")
-    try:
-        amount = Decimal(value)
-    except InvalidOperation as exc:
-        raise ValueError("Enter a valid price.") from exc
-    if not amount.is_finite() or amount < 0:
+    if not value:
+        raise ValueError("Enter today's price.")
+    if value.startswith("-"):
         raise ValueError("Price cannot be negative.")
-    return int(amount * 100)
+    if not PRICE_PATTERN.fullmatch(value):
+        raise ValueError("Enter a price with up to 16 whole rupee digits and two decimal places.")
+    rupees, _, fraction = value.partition(".")
+    return int(rupees) * 100 + int((fraction + "00")[:2])
 
 
 def _parse_quantity(raw, quantity_rule):
     value = (raw or "").strip()
     if not value:
         raise ValueError("Enter the current stock quantity.")
+    if len(value) > 40:
+        raise ValueError("Enter a stock quantity with at most 40 characters.")
     try:
         quantity = Decimal(value)
     except InvalidOperation as exc:
@@ -243,7 +274,8 @@ def _parse_quantity(raw, quantity_rule):
 
 
 def _quantity_text(quantity):
-    return format(quantity.normalize(), "f") if quantity else "0"
+    text = format(quantity, "f")
+    return text.rstrip("0").rstrip(".") if "." in text else text
 
 
 @bp.post("/vendor/save")
@@ -251,6 +283,10 @@ def vendor_save():
     db = get_db()
     shop_id = request.form.get("shop_id", "")
     item_id = request.form.get("item_id", "")
+    if not _valid_csrf_token():
+        authorized_shop = session.get("vendor_shop_id", "")
+        return _render_vendor(db, authorized_shop,
+                              error="This form expired. Refresh the page and try again."), 400
     if not shop_id or session.get("vendor_shop_id") != shop_id:
         session.pop("vendor_shop_id", None)
         return redirect(url_for("pages.vendor", shop_id=shop_id or None))

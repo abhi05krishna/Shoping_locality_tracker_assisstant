@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -14,36 +15,81 @@ def _price_paise(value):
         amount = Decimal(str(value))
     except InvalidOperation as exc:
         raise ValueError(f"Invalid sample price: {value!r}") from exc
-    if not amount.is_finite() or amount < 0 or amount.as_tuple().exponent < -2:
-        raise ValueError(f"Sample prices must be nonnegative with at most two decimals: {value!r}")
+    if (not amount.is_finite() or amount < 0 or amount.as_tuple().exponent < -2
+            or amount.adjusted() > 15):
+        raise ValueError(f"Sample prices must be nonnegative, at most 16 whole rupee digits, and have at most two decimals: {value!r}")
     return int(amount * 100)
 
 
 def load_sample_data(path=SEED_PATH):
+    source = Path(path)
     try:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        data = json.loads(source.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"Cannot read sample data at {path}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"Sample data at {source} must contain a JSON object.")
     if not isinstance(data.get("items"), list) or len(data["items"]) != 12:
-        raise ValueError("Sample data must define exactly 12 catalog items.")
+        raise ValueError(f"Sample data at {source} must define exactly 12 catalog items.")
     if not isinstance(data.get("shops"), list) or not 3 <= len(data["shops"]) <= 4:
-        raise ValueError("Sample data must define three or four shops.")
-    item_ids = {item["id"] for item in data["items"]}
-    if len(item_ids) != 12 or data.get("default_shop_id") not in {shop["id"] for shop in data["shops"]}:
-        raise ValueError("Sample item IDs must be unique and the default shop must exist.")
+        raise ValueError(f"Sample data at {source} must define three or four shops.")
+
     for item in data["items"]:
-        if len(item.get("prices", [])) != 7:
-            raise ValueError(f"{item['name']} needs exactly seven sample price values.")
+        if not isinstance(item, dict):
+            raise ValueError(f"Every item in {source} must be a JSON object.")
+        if any(not isinstance(item.get(field), str) or not item[field].strip()
+               for field in ("id", "name", "unit")):
+            raise ValueError(f"Each item in {source} needs a nonempty ID, name, and unit.")
+        quantity_rule = item.get("quantity_rule")
+        if not isinstance(quantity_rule, str) or quantity_rule not in {"decimal", "whole"}:
+            raise ValueError(f"{item['name']} in {source} needs a decimal or whole quantity rule.")
+        if not isinstance(item.get("prices"), list) or len(item["prices"]) != 7:
+            raise ValueError(f"{item['name']} in {source} needs exactly seven sample prices.")
         for price in item["prices"]:
             _price_paise(price)
+
+    item_ids = {item["id"] for item in data["items"]}
+    if len(item_ids) != 12:
+        raise ValueError(f"Item IDs in {source} must be unique.")
+    item_rules = {item["id"]: item["quantity_rule"] for item in data["items"]}
+
+    shop_ids = set()
     for shop in data["shops"]:
-        if set(shop.get("stock", {})) != item_ids:
-            raise ValueError(f"Shop {shop.get('name', shop.get('id'))} must have stock and a low-stock limit for all 12 items.")
-        for values in shop["stock"].values():
-            quantity = Decimal(str(values["quantity"]))
-            limit = Decimal(str(values["low_stock_limit"]))
+        if not isinstance(shop, dict):
+            raise ValueError(f"Every shop in {source} must be a JSON object.")
+        if any(not isinstance(shop.get(field), str) or not shop[field].strip()
+               for field in ("id", "name")):
+            raise ValueError(f"Each shop in {source} needs a nonempty ID and name.")
+        if shop["id"] in shop_ids:
+            raise ValueError(f"Shop IDs in {source} must be unique.")
+        shop_ids.add(shop["id"])
+        if not isinstance(shop.get("pin"), str) or not re.fullmatch(r"[0-9]{4}", shop["pin"]):
+            raise ValueError(f"{shop['name']} in {source} needs a four-digit sample PIN.")
+        try:
+            adjustment = Decimal(str(shop["price_adjustment"]))
+        except (KeyError, InvalidOperation, TypeError, ValueError) as exc:
+            raise ValueError(f"{shop['name']} in {source} has an invalid price adjustment.") from exc
+        if not adjustment.is_finite() or adjustment.as_tuple().exponent < -2:
+            raise ValueError(f"{shop['name']} in {source} needs a finite adjustment with at most two decimals.")
+        stock_items = shop.get("stock")
+        if not isinstance(stock_items, dict) or set(stock_items) != item_ids:
+            raise ValueError(f"{shop['name']} in {source} needs stock and a low-stock limit for all 12 items.")
+        for item_id, values in stock_items.items():
+            if not isinstance(values, dict):
+                raise ValueError(f"{shop['name']} in {source} has invalid stock data for {item_id}.")
+            try:
+                quantity = Decimal(str(values["quantity"]))
+                limit = Decimal(str(values["low_stock_limit"]))
+            except (KeyError, InvalidOperation, TypeError, ValueError) as exc:
+                raise ValueError(f"{shop['name']} in {source} has invalid stock values for {item_id}.") from exc
             if not quantity.is_finite() or not limit.is_finite() or quantity < 0 or limit < 0:
-                raise ValueError("Sample quantities and low-stock limits must be finite and nonnegative.")
+                raise ValueError(f"Stock and limits in {source} must be finite and nonnegative.")
+            if item_rules[item_id] == "whole" and (quantity != quantity.to_integral_value()
+                                                     or limit != limit.to_integral_value()):
+                raise ValueError(f"Whole-number items in {source} need integer stock and limits.")
+    default_shop_id = data.get("default_shop_id")
+    if not isinstance(default_shop_id, str) or default_shop_id not in shop_ids:
+        raise ValueError(f"The default shop in {source} must match one of its shop IDs.")
     return data
 
 

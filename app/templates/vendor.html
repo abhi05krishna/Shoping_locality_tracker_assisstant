@@ -45,6 +45,7 @@
         <div class="pin-section">
           <div><h3>Unlock {{ selected_shop_name }}</h3><p class="form-hint">Enter the shop’s 4-digit demo PIN to update its stock.</p></div>
           <form class="form-group" method="post" action="{{ url_for('pages.vendor_unlock') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="shop_id" value="{{ selected_shop_id }}">
             <label for="shop-pin">4-digit shop PIN</label>
             <input id="shop-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="••••" required autofocus>
@@ -54,7 +55,7 @@
       {% elif selected_item %}
         <div class="vendor-toolbar">
           <div><p class="eyebrow">EDITING</p><p class="current-shop-name">{{ selected_shop_name }}</p></div>
-          <form method="post" action="{{ url_for('pages.vendor_lock') }}"><button class="lock-button" type="submit">Lock</button></form>
+          <form method="post" action="{{ url_for('pages.vendor_lock') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="lock-button" type="submit">Lock</button></form>
         </div>
 
         <form class="form-group item-picker-form" method="get" action="{{ url_for('pages.vendor') }}">
@@ -78,6 +79,7 @@
         </div>
 
         <form class="update-form" method="post" action="{{ url_for('pages.vendor_save') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="shop_id" value="{{ selected_shop_id }}">
           <input type="hidden" name="item_id" value="{{ selected_item.id }}">
           <div class="input-grid">

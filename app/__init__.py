@@ -13,6 +13,7 @@ def create_app(test_config=None):
         SECRET_KEY=secrets.token_urlsafe(32),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
+        MAX_CONTENT_LENGTH=16 * 1024,
     )
     if test_config:
         app.config.update(test_config)

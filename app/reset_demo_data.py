@@ -13,18 +13,21 @@ def main():
         return 0
 
     database = Path(__file__).resolve().parent.parent / "instance" / "local_shop.sqlite3"
-    database.parent.mkdir(parents=True, exist_ok=True)
-    data = load_sample_data()
-    db = connect_db(database)
+    db = None
     try:
+        data = load_sample_data()
+        database.parent.mkdir(parents=True, exist_ok=True)
+        db = connect_db(database)
         db.executescript(SCHEMA)
         seed_database(db, data)
     except Exception as exc:
-        db.rollback()
+        if db is not None:
+            db.rollback()
         print(f"Reset failed; the database transaction was rolled back: {exc}")
         return 1
     finally:
-        db.close()
+        if db is not None:
+            db.close()
     print("Demo data reset complete. Sample prices and history now use today's local date.")
     return 0
 

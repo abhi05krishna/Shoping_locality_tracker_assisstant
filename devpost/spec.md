@@ -95,9 +95,9 @@ Implements `prd.md > Sample catalog, prices, and history`, `Demo data reset`, an
 
 ### Vendor PIN gate and session — `app/auth.py`, `app/routes.py`
 
-Validate that PIN input contains exactly four digits before comparison. Compare the entered value on the server against the selected shop's PIN in the seed data. Keep the wrong-attempt counter and `locked_until` in SQLite per shop, so refreshing or restarting the server cannot bypass that shop's cooldown. After the fifth wrong PIN, block that shop for 30 seconds; after cooldown clear that shop's attempt count. Keep the vendor unlocked after Save using Flask's signed session, which stores only the authorized shop ID. A shop change or Lock clears the authorized shop from the session and returns to PIN entry. Do not pass seed PINs to Jinja context or serialize them to the browser.
+Validate that PIN input contains exactly four digits before comparison. Compare the entered value on the server against the selected shop's PIN in the seed data. Keep the wrong-attempt counter and `locked_until` in SQLite per shop, so refreshing or restarting the server cannot bypass that shop's cooldown. After the fifth wrong PIN, block that shop for 30 seconds; after cooldown clear that shop's attempt count. Keep the vendor unlocked after Save using Flask's signed session. Include a per-session CSRF token in the signed session and each vendor POST form; use a constant-time match and reject invalid forms before any state change. A shop change or Lock clears the authorized shop from the session and returns to PIN entry. Do not pass seed PINs to Jinja context or serialize them to the browser.
 
-Flask's default session cookie is signed, not encrypted; its only value here is a non-secret shop ID. A per-run random signing key means a server restart requires the vendor to enter the PIN again. The local-only four-digit demo PIN is not production authentication.
+Flask's default session cookie is signed, not encrypted; it contains a non-secret shop ID and CSRF token, never the PIN. A per-run random signing key means a server restart requires the vendor to enter the PIN again. The local-only four-digit demo PIN is not production authentication.
 
 Implements `prd.md > Vendor access and stock updates` and `States and Boundaries`.
 
@@ -109,7 +109,7 @@ Implements `prd.md > Buyer browsing and item details` and `Sample catalog, price
 
 ### Vendor editor — `app/templates/vendor.html`, `app/routes.py`, `app/db.py`
 
-Render a single tile for shop selection/PIN, then item selection and price/quantity form after server authorization. Validate every field again on the server: required, nonnegative price/quantity, no more than two price decimals, fractional quantities for kg/litre items, whole-number dozens for eggs. Zero quantity is valid. On valid submit, update stock and the one point for today's price atomically. Show a confirmation and vendor-only low-stock flag; do not close the session after Save. Provide Lock to clear access.
+Render a single tile for shop selection/PIN, then item selection and price/quantity form after server authorization. Include a per-session CSRF token on every vendor POST and reject submissions without a matching token before any state change. Validate every field again on the server: required, nonnegative prices up to 16 whole rupee digits with at most two decimal places, bounded input length, fractional quantities for kg/litre items, and whole-number dozens for eggs. Zero quantity is valid. On valid submit, update stock and the one point for today's price atomically. Show a confirmation and vendor-only low-stock flag; do not close the session after Save. Provide Lock to clear access.
 
 Implements `prd.md > Vendor access and stock updates`.
 
@@ -122,7 +122,7 @@ Implements `prd.md > Vendor access and stock updates`.
 | `items` | `id`, `name`, fixed `unit`, quantity rule (`decimal` or `whole`). | Seeded from JSON. |
 | `shop_items` | `shop_id`, `item_id`, `quantity_decimal`, `low_stock_limit_decimal`; composite primary key. | Seeded from JSON; vendor save changes quantity. |
 | `price_history` | `shop_id`, `item_id`, `price_date` (local ISO date), integer `price_paise`; unique `(shop_id,item_id,price_date)`. Prices are never binary floats. | Seeded from JSON and updated by upsert on `(shop_id,item_id,price_date)`. A same-day save replaces the existing point. Rows persist across app restarts. |
-| Flask signed session | `vendor_shop_id` only; never the PIN. | Browser cookie signed by the server key; remains unlocked through Save, and clears on Lock, shop switch, or server restart. |
+| Flask signed session | `vendor_shop_id` and a per-session CSRF token; never the PIN. | Browser cookie signed by the server key; remains unlocked through Save, and clears on Lock, shop switch, or server restart. |
 
 ## File Structure
 
@@ -177,6 +177,7 @@ No external service, account, API key, or network API is required at runtime.
 - **SQLite write error or locked database** → rollback the update/reset transaction and show a plain error; instruct the user to stop the app before running reset.
 - **No recent price history** → show available chart data and “No price history yet”; do not show “Price falling.”
 - **Incorrect PIN or lockout** → show the PRD's exact message, keep shop data hidden, and leave stock/price unchanged.
+- **Missing or invalid CSRF token** → reject the vendor POST with a refresh message; do not change lockout attempts, stock, prices, or session access.
 
 ## What Was Simplified and Why
 
@@ -185,7 +186,7 @@ No external service, account, API key, or network API is required at runtime.
 - **Inline SVG** instead of a chart dependency — enough for seven points and works offline; the tradeoff is no built-in zoom or elaborate chart interactions.
 - **Sample PIN gate** instead of account authentication — demonstrates shop-specific updates locally; the tradeoff is explicitly not production security.
 - **Resettable seeded records** instead of real shop integrations — makes the demo reproducible and its statuses guaranteed; values are labeled sample data.
-- **Dark mode last and optional** — preserves time for the end-to-end loop and polish.
+- **One light theme** — avoids optional theme code so the time goes to the end-to-end loop and polish.
 
 ## Build Sequence for `5-build`
 
@@ -212,6 +213,7 @@ Derived from `prd.md > The Core Journey`, `Buyer browsing and item details`, `Ve
 - [ ] Each card shows “Cheapest today” only when its shop is tied for the lowest effective price among in-stock local shops; out-of-stock shops are excluded. Each card's “Price falling” chip follows the six-day rule, and clicking a card scrolls the chart tile into view.
 - [ ] A same-day save replaces the shop-item's price point for today; there is still only one point for that date.
 - [ ] Empty/malformed/wrong PIN paths show the specified messages; wrong PIN never reveals shop data or changes it. After five wrong attempts, access is blocked for 30 seconds. PIN values are absent from rendered page source and browser responses.
+- [ ] Vendor unlock, Save, and Lock requests without a matching session CSRF token are rejected without changing shop data, PIN attempts, or access.
 - [ ] After successful PIN entry, Save keeps the vendor unlocked; switching shops or pressing Lock returns to PIN entry.
 - [ ] Empty and negative price/quantity values are rejected; zero quantity saves; fractional kg and litre quantities save; eggs per dozen reject decimals.
 - [ ] A valid vendor save shows confirmation, the vendor-only low-stock cue is correct, and buyer refresh shows the updated price/quantity/status and today's chart point.
